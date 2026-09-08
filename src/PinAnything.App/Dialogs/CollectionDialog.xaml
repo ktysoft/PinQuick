@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="PinAnything_App.Dialogs.CollectionDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    Title="Yeni Koleksiyon"
+    PrimaryButtonText="Oluştur"
+    SecondaryButtonText="İptal"
+    DefaultButton="Primary"
+    mc:Ignorable="d">
+
+    <StackPanel Width="360" Spacing="12">
+        <TextBlock x:Name="ErrorText"
+                   Text=""
+                   Foreground="Red"
+                   Visibility="Collapsed"
+                   TextWrapping="Wrap" />
+        <TextBox x:Name="NameBox"
+                 Header="Koleksiyon adı"
+                 PlaceholderText="Geliştirme, Sistem, Kişisel..." />
+    </StackPanel>
+</ContentDialog>

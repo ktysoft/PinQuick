@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PinAnything.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "PinAnything.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

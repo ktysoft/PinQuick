@@ -1,0 +1,27 @@
+# Build output
+bin/
+obj/
+artifacts/
+
+# IDE / Editor
+.vs/
+.idea/
+*.user
+*.suo
+
+# Test results
+TestResults/
+*.trx
+
+# Local data (SQLite, logs)
+*.db
+*.db-journal
+*.log
+data/
+
+# OS
+Thumbs.db
+Desktop.ini
+
+# KTYSoft
+AGENTS.md
