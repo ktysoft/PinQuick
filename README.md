@@ -1,8 +1,8 @@
-# Pin Anything
+# PinQuick
 
 > Windows için kişisel hızlı erişim katmanı — **by KTYSoft**
 
-Pin Anything, Windows üzerinde sık eriştiğiniz her şeyi (uygulamalar, klasörler,
+PinQuick, Windows üzerinde sık eriştiğiniz her şeyi (uygulamalar, klasörler,
 dosyalar, web siteleri, komutlar, sistem araçları, ağ yolları…) tek, hızlı ve
 modern bir merkezde toplayıp tek hareketle açmanızı sağlayan hafif bir masaüstü
 uygulamasıdır.
@@ -30,12 +30,12 @@ uygulamasıdır.
 
 ```text
 src/
-├── PinAnything.Core       Pin modeli, PinManager, CollectionManager, validasyon, export
-├── PinAnything.Storage    SQLite veritabanı, migration, repository'ler
-├── PinAnything.Windows    ProcessLauncher (ShellExecute / URI / CMD / PowerShell)
-└── PinAnything.App        WinUI 3 (Windows App SDK) arayüz, MVVM
+├── PinQuick.Core       Pin modeli, PinManager, CollectionManager, validasyon, export
+├── PinQuick.Storage    SQLite veritabanı, migration, repository'ler
+├── PinQuick.Windows    ProcessLauncher (ShellExecute / URI / CMD / PowerShell)
+└── PinQuick.App        WinUI 3 (Windows App SDK) arayüz, MVVM
 tests/
-└── PinAnything.Tests      xUnit testler
+└── PinQuick.Tests      xUnit testler
 ```
 
 ## Gereksinimler
@@ -48,19 +48,19 @@ tests/
 
 ```powershell
 dotnet restore
-dotnet build PinAnything.slnx
-dotnet test tests/PinAnything.Tests
+dotnet build PinQuick.slnx
+dotnet test tests/PinQuick.Tests
 ```
 
 Uygulamayı çalıştırmak için (WinUI paketli uygulama, geliştirici modu gerekir):
 
 ```powershell
-dotnet run --project src/PinAnything.App
+dotnet run --project src/PinQuick.App
 ```
 
 ## Veri
 
-Veriler varsayılan olarak `%LOCALAPPDATA%\PinAnything\Data\pins.db` içinde
+Veriler varsayılan olarak `%LOCALAPPDATA%\PinQuick\Data\pins.db` içinde
 SQLite tabanlı tutulur. Uygulama portablesını desteklemek için veri dizini
 taşınabilir şekilde yapılandırılabilir.
 

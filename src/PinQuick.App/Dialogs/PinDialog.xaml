@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="PinQuick.App.Dialogs.PinDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:models="using:PinQuick.Core.Models"
+    xmlns:local="using:PinQuick.App.Dialogs"
+    xmlns:svc="using:PinQuick.App.Services"
+    xmlns:vm="using:PinQuick.App.ViewModels"
+    Title="{x:Bind svc:Strings.NewPinDialogTitle}"
+    PrimaryButtonText="{x:Bind svc:Strings.SaveButton}"
+    SecondaryButtonText="{x:Bind svc:Strings.CancelButton}"
+    DefaultButton="Primary"
+    MinWidth="460"
+    mc:Ignorable="d">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="520">
+        <Grid Width="420" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock x:Name="ErrorText"
+                       Grid.Row="0"
+                       Text=""
+                       Foreground="Red"
+                       Visibility="Collapsed"
+                       TextWrapping="Wrap" />
+
+            <TextBox x:Name="TitleBox"
+                     Grid.Row="1"
+                     Header="{x:Bind svc:Strings.FieldTitle}"
+                     PlaceholderText="{x:Bind svc:Strings.TitlePlaceholder}" />
+
+            <ComboBox x:Name="TypeCombo"
+                      Grid.Row="2"
+                      Header="{x:Bind svc:Strings.FieldType}"
+                      HorizontalAlignment="Stretch"
+                      SelectionChanged="TypeCombo_SelectionChanged" />
+
+            <Grid Grid.Row="3" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="TargetBox"
+                         Grid.Column="0"
+                         Header="{x:Bind svc:Strings.FieldTarget}"
+                         PlaceholderText="{x:Bind svc:Strings.TargetPlaceholder}"
+                         AcceptsReturn="False" />
+
+                <Button x:Name="BrowseButton"
+                        Grid.Column="1"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,6"
+                        Content="{x:Bind svc:Strings.BrowseButton}"
+                        Click="BrowseButton_Click" />
+            </Grid>
+
+            <TextBox x:Name="ArgumentsBox"
+                     Grid.Row="4"
+                     Header="{x:Bind svc:Strings.FieldArguments}"
+                     PlaceholderText="{x:Bind svc:Strings.ArgumentsPlaceholder}" />
+
+            <TextBox x:Name="WorkingDirectoryBox"
+                     Grid.Row="5"
+                     Header="{x:Bind svc:Strings.FieldWorkingDirectory}"
+                     PlaceholderText="{x:Bind svc:Strings.OptionalPlaceholder}" />
+
+            <TextBox x:Name="DescriptionBox"
+                     Grid.Row="6"
+                     Header="{x:Bind svc:Strings.FieldDescription}"
+                     PlaceholderText="{x:Bind svc:Strings.OptionalPlaceholder}"
+                     AcceptsReturn="True"
+                     MinHeight="64"
+                     TextWrapping="Wrap" />
+
+            <TextBox x:Name="TagsBox"
+                     Grid.Row="7"
+                     Header="{x:Bind svc:Strings.FieldTags}"
+                     PlaceholderText="{x:Bind svc:Strings.TagsPlaceholder}" />
+
+            <ComboBox x:Name="CollectionCombo"
+                      Grid.Row="8"
+                      Header="{x:Bind svc:Strings.FieldCollection}"
+                      HorizontalAlignment="Stretch"
+                      PlaceholderText="{x:Bind svc:Strings.NoCollectionPlaceholder}" />
+
+            <CheckBox x:Name="FavoriteCheck"
+                      Grid.Row="9"
+                      Content="{x:Bind svc:Strings.FieldFavorite}" />
+
+            <CheckBox x:Name="AdminCheck"
+                      Grid.Row="10"
+                      Content="{x:Bind svc:Strings.FieldAdmin}" />
+
+            <Grid Grid.Row="11" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="IconBox"
+                         Grid.Column="0"
+                         Header="{x:Bind svc:Strings.FieldIcon}"
+                         PlaceholderText="{x:Bind svc:Strings.IconAutoPlaceholder}" />
+                <Button Grid.Column="1"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,6"
+                        Content="{x:Bind svc:Strings.LibraryButton}">
+                    <Button.Flyout>
+                        <Flyout x:Name="IconLibraryFlyout" Placement="Bottom">
+                            <ScrollViewer MaxHeight="380" VerticalScrollBarVisibility="Auto">
+                                <GridView x:Name="IconGrid"
+                                          Width="420"
+                                          SelectionMode="None"
+                                          IsItemClickEnabled="True"
+                                          ItemClick="IconGrid_ItemClick">
+                                    <GridView.ItemTemplate>
+                                        <DataTemplate x:DataType="local:GlyphOption">
+                                            <StackPanel Width="76" Padding="4" Spacing="2" HorizontalAlignment="Center">
+                                                <FontIcon Glyph="{x:Bind Glyph}"
+                                                          FontSize="26"
+                                                          HorizontalAlignment="Center" />
+                                                <TextBlock Text="{x:Bind Name}"
+                                                           FontSize="10"
+                                                           TextAlignment="Center"
+                                                           TextWrapping="Wrap"
+                                                           MaxLines="2" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </GridView.ItemTemplate>
+                                </GridView>
+                            </ScrollViewer>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+                <Button Grid.Column="2"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,6"
+                        Content="{x:Bind svc:Strings.BrowseButton}"
+                        Click="IconBrowseButton_Click" />
+                <Button Grid.Column="3"
+                        VerticalAlignment="Bottom"
+                        Margin="0,0,0,6"
+                        Content="{x:Bind svc:Strings.ClearButton}"
+                        Click="IconClearButton_Click" />
+            </Grid>
+        </Grid>
+    </ScrollViewer>
+</ContentDialog>

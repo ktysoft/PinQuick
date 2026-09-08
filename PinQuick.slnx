@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PinQuick.App/PinQuick.App.csproj" />
+    <Project Path="src/PinQuick.Core/PinQuick.Core.csproj" />
+    <Project Path="src/PinQuick.Storage/PinQuick.Storage.csproj" />
+    <Project Path="src/PinQuick.Windows/PinQuick.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PinQuick.Tests/PinQuick.Tests.csproj" />
+  </Folder>
+</Solution>

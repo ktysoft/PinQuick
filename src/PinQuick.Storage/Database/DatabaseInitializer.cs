@@ -1,0 +1,109 @@
+using Microsoft.Data.Sqlite;
+
+namespace PinQuick.Storage.Database;
+
+/// <summary>
+/// SQLite veritabanını açar, şemayı oluşturur ve migration sistemini yönetir.
+/// </summary>
+public sealed class DatabaseInitializer
+{
+    private const int CurrentSchemaVersion = 1;
+    private readonly string _connectionString;
+
+    public DatabaseInitializer(string connectionString)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
+        _connectionString = connectionString;
+    }
+
+    public SqliteConnection OpenConnection()
+    {
+        var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        return connection;
+    }
+
+    /// <summary>
+    /// Veritabanını hazırlar: tabloları oluşturur ve migration'ları uygular.
+    /// </summary>
+    public void Initialize()
+    {
+        using var connection = OpenConnection();
+
+        CreateSchemaVersionTable(connection);
+        CreateTables(connection);
+        UpdateSchemaVersion(connection);
+    }
+
+    private static void CreateSchemaVersionTable(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            CREATE TABLE IF NOT EXISTS SchemaVersion (
+                Id INTEGER PRIMARY KEY,
+                Version INTEGER NOT NULL,
+                AppliedAt TEXT NOT NULL
+            );
+            """;
+        command.ExecuteNonQuery();
+    }
+
+    private static void CreateTables(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            CREATE TABLE IF NOT EXISTS Collections (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Name TEXT NOT NULL,
+                Icon TEXT NOT NULL DEFAULT '',
+                Color TEXT NOT NULL DEFAULT '',
+                SortOrder INTEGER NOT NULL DEFAULT 0,
+                CreatedAt TEXT NOT NULL,
+                UpdatedAt TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS Pins (
+                Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                Title TEXT NOT NULL,
+                Description TEXT NOT NULL DEFAULT '',
+                Type INTEGER NOT NULL,
+                Target TEXT NOT NULL DEFAULT '',
+                Arguments TEXT NOT NULL DEFAULT '',
+                WorkingDirectory TEXT NOT NULL DEFAULT '',
+                Icon TEXT NOT NULL DEFAULT '',
+                CollectionId INTEGER NULL,
+                IsFavorite INTEGER NOT NULL DEFAULT 0,
+                IsEnabled INTEGER NOT NULL DEFAULT 1,
+                CreatedAt TEXT NOT NULL,
+                UpdatedAt TEXT NOT NULL,
+                LastUsedAt TEXT NULL,
+                UseCount INTEGER NOT NULL DEFAULT 0,
+                SortOrder INTEGER NOT NULL DEFAULT 0,
+                Tags TEXT NOT NULL DEFAULT '',
+                RunAsAdministrator INTEGER NOT NULL DEFAULT 0,
+                OpenWith TEXT NOT NULL DEFAULT '',
+                CustomColor TEXT NOT NULL DEFAULT '',
+                CustomShortcut TEXT NOT NULL DEFAULT '',
+                FOREIGN KEY (CollectionId) REFERENCES Collections(Id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS IX_Pins_Title ON Pins(Title);
+            CREATE INDEX IF NOT EXISTS IX_Pins_Type ON Pins(Type);
+            CREATE INDEX IF NOT EXISTS IX_Pins_CollectionId ON Pins(CollectionId);
+            CREATE INDEX IF NOT EXISTS IX_Pins_IsFavorite ON Pins(IsFavorite);
+            CREATE INDEX IF NOT EXISTS IX_Pins_Target ON Pins(Target);
+            """;
+        command.ExecuteNonQuery();
+    }
+
+    private static void UpdateSchemaVersion(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT OR IGNORE INTO SchemaVersion (Id, Version, AppliedAt) VALUES (1, $version, $appliedAt)";
+        command.Parameters.AddWithValue("$version", CurrentSchemaVersion);
+        command.Parameters.AddWithValue("$appliedAt", DateTime.UtcNow.ToString("o"));
+        command.ExecuteNonQuery();
+    }
+}

@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "PinQuick.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "PinQuick.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

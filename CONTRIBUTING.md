@@ -1,6 +1,6 @@
-# Contributing to Pin Anything
+# Contributing to PinQuick
 
-Teşekkürler! Pin Anything'e katkıda bulunmak istediğiniz için harika.
+Teşekkürler! PinQuick'e katkıda bulunmak istediğiniz için harika.
 
 ## Katkı Süreci
 
@@ -12,8 +12,8 @@ Teşekkürler! Pin Anything'e katkıda bulunmak istediğiniz için harika.
 ## Geliştirme
 
 ```powershell
-dotnet build PinAnything.slnx
-dotnet test tests/PinAnything.Tests
+dotnet build PinQuick.slnx
+dotnet test tests/PinQuick.Tests
 ```
 
 ## Commit Kuralları

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentDialog
+    x:Class="PinQuick.App.Dialogs.SettingsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:svc="using:PinQuick.App.Services"
+    Title="{x:Bind svc:Strings.SettingsDialogTitle}"
+    PrimaryButtonText="{x:Bind svc:Strings.SaveButton}"
+    SecondaryButtonText="{x:Bind svc:Strings.CancelButton}"
+    DefaultButton="Primary"
+    MinWidth="380"
+    mc:Ignorable="d">
+
+    <StackPanel Spacing="16" Margin="8">
+        <TextBlock Text="{x:Bind svc:Strings.ThemeLabel}" FontWeight="SemiBold" />
+        <ComboBox x:Name="ThemeCombo"
+                  HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="{x:Bind svc:Strings.ThemeSystem}" />
+            <ComboBoxItem Content="{x:Bind svc:Strings.ThemeDark}" />
+            <ComboBoxItem Content="{x:Bind svc:Strings.ThemeLight}" />
+        </ComboBox>
+
+        <TextBlock Text="{x:Bind svc:Strings.LanguageLabel}" FontWeight="SemiBold" />
+        <ComboBox x:Name="LanguageCombo"
+                  HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="{x:Bind svc:Strings.LanguageTurkish}" />
+            <ComboBoxItem Content="{x:Bind svc:Strings.LanguageEnglish}" />
+        </ComboBox>
+
+        <ToggleSwitch x:Name="StartupToggle"
+                      Header="{x:Bind svc:Strings.StartupLabel}"
+                      HorizontalAlignment="Left" />
+    </StackPanel>
+</ContentDialog>
