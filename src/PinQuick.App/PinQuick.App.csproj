@@ -73,9 +73,20 @@
 
   <!-- Publish Properties -->
   <PropertyGroup>
-    <PublishReadyToRun Condition="'$(Configuration)' == 'Debug'">False</PublishReadyToRun>
-    <PublishReadyToRun Condition="'$(Configuration)' != 'Debug'">True</PublishReadyToRun>
-    <PublishTrimmed Condition="'$(Configuration)' == 'Debug'">False</PublishTrimmed>
-    <PublishTrimmed Condition="'$(Configuration)' != 'Debug'">True</PublishTrimmed>
+    <PublishReadyToRun>False</PublishReadyToRun>
+    <PublishTrimmed>False</PublishTrimmed>
+    <SelfContained>true</SelfContained>
   </PropertyGroup>
+
+  <!--
+    WindowsAppSDK 2.4 self-contained publish ile uygulamanin kendi
+    <AssemblyName>.pri dosyasi publish dizinine kopyalanmiyor; XAML
+    LoadComponent bu kaynak olmadan basarisiz oluyor.
+    Bu target, publish cikisina <AssemblyName>.pri dosyasini ekler.
+  -->
+  <Target Name="CopyAppPriToPublish" AfterTargets="Publish">
+    <Copy Condition="Exists('$(OutDir)$(AssemblyName).pri')"
+          SourceFiles="$(OutDir)$(AssemblyName).pri"
+          DestinationFolder="$(PublishDir)" />
+  </Target>
 </Project>
