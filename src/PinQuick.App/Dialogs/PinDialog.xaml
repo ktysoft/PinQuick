@@ -61,7 +61,8 @@
                          Grid.Column="0"
                          Header="{x:Bind svc:Strings.FieldTarget}"
                          PlaceholderText="{x:Bind svc:Strings.TargetPlaceholder}"
-                         AcceptsReturn="False" />
+                         AcceptsReturn="False"
+                         TextChanged="TargetBox_TextChanged" />
 
                 <Button x:Name="BrowseButton"
                         Grid.Column="1"

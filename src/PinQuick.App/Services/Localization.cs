@@ -25,12 +25,17 @@ public static class Loc
         ["HeadMenuTooltip"] = "Dışa / içe aktarma",
         ["MenuExport"] = "Pins dışa aktar (JSON)",
         ["MenuImport"] = "Pins içe aktar (JSON)",
-        ["HeadRefreshTooltip"] = "Yenile (Ctrl + R): isimleri ve ikonları tekrar tara",
+        ["MenuBackup"] = "Yedek Al (ZIP)",
+        ["MenuRestore"] = "Yedekten Geri Yükle",
+        ["MenuShowTour"] = "Eğitimi Göster",
         ["HeadSettingsTooltip"] = "Ayarlar",
         ["SearchPlaceholder"] = "Ne yapmak istiyorsun?  (Ctrl + K)",
+        ["SearchHistoryLabel"] = "Son Aramalar",
+        ["SearchHistoryClear"] = "Geçmişi temizle",
 
         // Sidebar
         ["SideCategories"] = "Kategoriler",
+        ["SideRecent"] = "Son Kullanılanlar",
         ["SideCollections"] = "Koleksiyonlar",
         ["SideToggleCollectionsTooltip"] = "Koleksiyonları göster / gizle",
         ["SideNewCollectionTooltip"] = "Yeni koleksiyon",
@@ -42,6 +47,8 @@ public static class Loc
         // Filters
         ["FilterAll"] = "Tüm Pinler",
         ["FilterFavorites"] = "Favoriler",
+        ["FilterRecent"] = "Son Kullanılanlar",
+        ["FilterBroken"] = "Bozuk Pinler",
         ["FilterApplications"] = "Uygulamalar",
         ["FilterFolders"] = "Klasörler",
         ["FilterFiles"] = "Dosyalar",
@@ -74,8 +81,14 @@ public static class Loc
         ["DetailOpenLocation"] = "Konumu aç",
         ["DetailEdit"] = "Düzenle",
         ["DetailDelete"] = "Sil",
+        ["DetailLastUsed"] = "Son kullanım",
+        ["DetailUseCount"] = "Kullanım sayısı",
+        ["DetailBroken"] = "Hedef şu an bulunamıyor",
+        ["BrokenBadgeTooltip"] = "Hedef bulunamadı veya geçersiz",
         ["ContextAddFavorite"] = "Favorilere ekle",
         ["ContextRemoveFavorite"] = "Favorilerden çıkar",
+        ["ContextAddToCollection"] = "Koleksiyona Ekle",
+        ["ContextNoCollection"] = "Koleksiyonsuz",
 
         // Status messages
         ["MsgNoPinsFound"] = "Pin bulunamadı.",
@@ -90,10 +103,17 @@ public static class Loc
         ["MsgExportNothing"] = "Dışa aktarılacak pin yok.",
         ["MsgLaunchFailed"] = "Pin başlatılamadı.",
         ["MsgOpenLocationFailed"] = "Konum açılamadı.",
+        ["MsgBackupCreated"] = "Yedek oluşturuldu.",
+        ["MsgBackupFailed"] = "Yedek oluşturulamadı.",
+        ["MsgRestoreDone"] = "Yedek geri yüklendi. Uygulama yeniden başlatılacak.",
+        ["MsgRestoreFailed"] = "Yedek geri yüklenemedi.",
+        ["RestoreConfirmMessage"] = "Bu işlem mevcut pinleri seçilen yedekteki verilerle değiştirecek. Emin misiniz?",
+        ["RestoreButton"] = "Geri Yükle",
 
         // Confirmation dialogs
         ["DeletePinTitle"] = "Pini sil",
         ["DeletePinPrompt"] = "'{0}' silinsin mi?",
+        ["DeleteSelectedPrompt"] = "Seçili {0} pin silinsin mi?",
         ["DeleteCollectionTitle"] = "Koleksiyonu sil",
         ["DeleteCollectionPrompt"] = "'{0}' koleksiyonu silinsin mi?",
         ["SilButton"] = "Sil",
@@ -103,6 +123,10 @@ public static class Loc
         ["NewPinDialogTitle"] = "Yeni Pin",
         ["EditPinDialogTitle"] = "Pini Düzenle",
         ["SaveButton"] = "Kaydet",
+        ["ValidationInvalidUrl"] = "Geçerli bir URL girin (http veya https ile başlamalı).",
+        ["ValidationInvalidMsSettings"] = "Hedef 'ms-settings:' ile başlamalı.",
+        ["ValidationInvalidNetworkPath"] = "Ağ yolu '\\\\sunucu\\paylaşım' biçiminde olmalı.",
+        ["ValidationTargetMissing"] = "Hedef şu an bulunamadı. Yine de eklemek istiyorsan Kaydet'e tekrar bas.",
         ["FieldTitle"] = "Başlık",
         ["TitlePlaceholder"] = "Pinin görünen adı",
         ["FieldType"] = "Tür",
@@ -136,9 +160,11 @@ public static class Loc
 
         // Collection dialog
         ["NewCollectionDialogTitle"] = "Yeni Koleksiyon",
+        ["EditCollectionTitle"] = "Koleksiyonu Düzenle",
         ["CreateButton"] = "Oluştur",
         ["FieldCollectionName"] = "Koleksiyon adı",
         ["CollectionNamePlaceholder"] = "Geliştirme, Sistem, Kişisel...",
+        ["SideEditCollectionTooltip"] = "Seçili koleksiyonu yeniden adlandır",
 
         // Settings dialog
         ["SettingsDialogTitle"] = "Ayarlar",
@@ -150,8 +176,37 @@ public static class Loc
         ["LanguageTurkish"] = "Türkçe",
         ["LanguageEnglish"] = "İngilizce",
         ["StartupLabel"] = "Windows ile başlat",
+        ["CardSizeLabel"] = "Kart boyutu",
+        ["CardSizeSmall"] = "Küçük",
+        ["CardSizeMedium"] = "Orta",
+        ["CardSizeLarge"] = "Büyük",
+        ["MinimizeToTrayLabel"] = "Pencere kapatıldığında tepsiye küçült",
+        ["GlobalHotkeyLabel"] = "Global kısayol (Ctrl+Space pencereyi göster/gizle)",
         ["RestartRequiredMessage"] = "Dil değişikliği için uygulamanın yeniden başlatılması gerekir. Şimdi yeniden başlatılsın mı?",
         ["RestartButton"] = "Yeniden Başlat",
+
+        // Onboarding turu
+        ["TourTitle"] = "PinQuick Turu",
+
+        ["TourStep1Title"] = "Arama Kutusu",
+        ["TourStep1Subtitle"] = "Pinleri başlıklarına, hedeflerine veya etiketlerine göre anında arayın.",
+        ["TourStep2Title"] = "Yeni Pin",
+        ["TourStep2Subtitle"] = "Dosya, klasör, uygulama, web sitesi ve daha fazlasını tek tıkla pinleyin.",
+        ["TourStep3Title"] = "Kategoriler",
+        ["TourStep3Subtitle"] = "Tümünü, favorileri, son kullanılanları veya bozuk pinleri buradan filtreleyin.",
+        ["TourStep4Title"] = "Koleksiyonlar",
+        ["TourStep4Subtitle"] = "Pinleri mantıklı gruplar halinde düzenleyin; koleksiyon ekleyin, yeniden adlandırın veya silin.",
+        ["TourStep5Title"] = "Pinler",
+        ["TourStep5Subtitle"] = "Bir pini açmak için çift tıklayın veya sağ tıklayarak gelişmiş seçeneklere ulaşın.",
+        ["TourStep6Title"] = "Ayarlar",
+        ["TourStep6Subtitle"] = "Tema, dil, başlangıç, sistem tepsisi ve global kısayolu buradan yönetin.",
+        ["TourStep7Title"] = "Menü",
+        ["TourStep7Subtitle"] = "Yedekleme, geri yükleme, dışa ve içe aktarma işlemlerine buradan erişin.",
+
+        ["TourNext"] = "Sonraki",
+        ["TourFinish"] = "Tamamla",
+        ["TourClose"] = "Kapat",
+        ["TourSkip"] = "Atla",
 
         // About
         ["AboutTitle"] = "{0} hakkında",
@@ -163,6 +218,20 @@ public static class Loc
         ["AboutLicense"] = "Lisans: {0}",
         ["CloseButton"] = "Kapat",
         ["ErrorTitle"] = "Hata",
+        ["TrayShow"] = "PinQuick'i Göster",
+        ["TrayExit"] = "Çıkış",
+        ["TrayTooltip"] = "PinQuick",
+        ["ThemeToggleTooltip"] = "Temayı değiştir",
+        ["DragToCollection"] = "Koleksiyona sürükle",
+        ["ExportFilterTitle"] = "Dışa Aktarılacak Pinleri Seç",
+        ["ExportFilterAll"] = "Tüm Pinler",
+        ["ExportFilterCurrent"] = "Mevcut Filtre",
+        ["MsgExportFiltered"] = "{0} pin dışa aktarıldı (filtreli).",
+        ["AutoBackupLabel"] = "Otomatik yedekleme",
+        ["AutoBackupNone"] = "Kapalı",
+        ["AutoBackupDaily"] = "Günlük",
+        ["AutoBackupWeekly"] = "Haftalık",
+        ["MsgAutoBackupCreated"] = "Otomatik yedek oluşturuldu.",
     };
 
     private static readonly Dictionary<string, string> _en = new()
@@ -171,11 +240,17 @@ public static class Loc
         ["HeadMenuTooltip"] = "Import / export",
         ["MenuExport"] = "Export pins (JSON)",
         ["MenuImport"] = "Import pins (JSON)",
-        ["HeadRefreshTooltip"] = "Refresh (Ctrl + R): re-scan names and icons",
+        ["MenuBackup"] = "Backup (ZIP)",
+        ["MenuRestore"] = "Restore from backup",
+        ["MenuShowTour"] = "Show tutorial",
         ["HeadSettingsTooltip"] = "Settings",
+        ["HeadRefreshTooltip"] = "Refresh (Ctrl + R): re-scan names and icons",
         ["SearchPlaceholder"] = "What do you want to do?  (Ctrl + K)",
+        ["SearchHistoryLabel"] = "Recent Searches",
+        ["SearchHistoryClear"] = "Clear history",
 
         ["SideCategories"] = "Categories",
+        ["SideRecent"] = "Recently Used",
         ["SideCollections"] = "Collections",
         ["SideToggleCollectionsTooltip"] = "Show / hide collections",
         ["SideNewCollectionTooltip"] = "New collection",
@@ -186,6 +261,8 @@ public static class Loc
 
         ["FilterAll"] = "All Pins",
         ["FilterFavorites"] = "Favorites",
+        ["FilterRecent"] = "Recent",
+        ["FilterBroken"] = "Broken Pins",
         ["FilterApplications"] = "Applications",
         ["FilterFolders"] = "Folders",
         ["FilterFiles"] = "Files",
@@ -216,8 +293,14 @@ public static class Loc
         ["DetailOpenLocation"] = "Open location",
         ["DetailEdit"] = "Edit",
         ["DetailDelete"] = "Delete",
+        ["DetailLastUsed"] = "Last used",
+        ["DetailUseCount"] = "Use count",
+        ["DetailBroken"] = "Target currently not found",
+        ["BrokenBadgeTooltip"] = "Target not found or invalid",
         ["ContextAddFavorite"] = "Add to favorites",
         ["ContextRemoveFavorite"] = "Remove from favorites",
+        ["ContextAddToCollection"] = "Add to collection",
+        ["ContextNoCollection"] = "No collection",
 
         ["MsgNoPinsFound"] = "No pins found.",
         ["MsgNothingToAdd"] = "No new pins to add.",
@@ -231,9 +314,16 @@ public static class Loc
         ["MsgExportNothing"] = "No pins to export.",
         ["MsgLaunchFailed"] = "Failed to launch pin.",
         ["MsgOpenLocationFailed"] = "Failed to open location.",
+        ["MsgBackupCreated"] = "Backup created.",
+        ["MsgBackupFailed"] = "Failed to create backup.",
+        ["MsgRestoreDone"] = "Backup restored. The app will restart.",
+        ["MsgRestoreFailed"] = "Failed to restore backup.",
+        ["RestoreConfirmMessage"] = "This will replace your current pins with the data from the selected backup. Are you sure?",
+        ["RestoreButton"] = "Restore",
 
         ["DeletePinTitle"] = "Delete pin",
         ["DeletePinPrompt"] = "Delete '{0}'?",
+        ["DeleteSelectedPrompt"] = "Delete {0} selected pins?",
         ["DeleteCollectionTitle"] = "Delete collection",
         ["DeleteCollectionPrompt"] = "Delete collection '{0}'?",
         ["SilButton"] = "Delete",
@@ -242,6 +332,10 @@ public static class Loc
         ["NewPinDialogTitle"] = "New Pin",
         ["EditPinDialogTitle"] = "Edit Pin",
         ["SaveButton"] = "Save",
+        ["ValidationInvalidUrl"] = "Enter a valid URL (must start with http or https).",
+        ["ValidationInvalidMsSettings"] = "Target must start with 'ms-settings:'.",
+        ["ValidationInvalidNetworkPath"] = "Network path must look like '\\\\server\\share'.",
+        ["ValidationTargetMissing"] = "Target not found. Click Save again to keep it anyway.",
         ["FieldTitle"] = "Title",
         ["TitlePlaceholder"] = "Display name of the pin",
         ["FieldType"] = "Type",
@@ -274,9 +368,11 @@ public static class Loc
         ["TargetHeaderSystemTool"] = "Target (devmgmt.msc etc.)",
 
         ["NewCollectionDialogTitle"] = "New Collection",
+        ["EditCollectionTitle"] = "Edit Collection",
         ["CreateButton"] = "Create",
         ["FieldCollectionName"] = "Collection name",
         ["CollectionNamePlaceholder"] = "Development, System, Personal...",
+        ["SideEditCollectionTooltip"] = "Rename selected collection",
 
         ["SettingsDialogTitle"] = "Settings",
         ["ThemeLabel"] = "Theme",
@@ -287,6 +383,12 @@ public static class Loc
         ["LanguageTurkish"] = "Turkish",
         ["LanguageEnglish"] = "English",
         ["StartupLabel"] = "Launch at Windows startup",
+        ["CardSizeLabel"] = "Card size",
+        ["CardSizeSmall"] = "Small",
+        ["CardSizeMedium"] = "Medium",
+        ["CardSizeLarge"] = "Large",
+        ["MinimizeToTrayLabel"] = "Minimize to tray when the window is closed",
+        ["GlobalHotkeyLabel"] = "Global hotkey (Ctrl+Space show/hide window)",
         ["RestartRequiredMessage"] = "The app must restart to apply the language change. Restart now?",
         ["RestartButton"] = "Restart",
 
@@ -299,6 +401,41 @@ public static class Loc
         ["AboutLicense"] = "License: {0}",
         ["CloseButton"] = "Close",
         ["ErrorTitle"] = "Error",
+        ["TrayShow"] = "Show PinQuick",
+        ["TrayExit"] = "Exit",
+        ["TrayTooltip"] = "PinQuick",
+        ["ThemeToggleTooltip"] = "Switch theme",
+        ["DragToCollection"] = "Drag to collection",
+        ["ExportFilterTitle"] = "Select Pins to Export",
+        ["ExportFilterAll"] = "All Pins",
+        ["ExportFilterCurrent"] = "Current Filter",
+        ["MsgExportFiltered"] = "{0} pins exported (filtered).",
+        ["AutoBackupLabel"] = "Automatic backup",
+        ["AutoBackupNone"] = "Off",
+        ["AutoBackupDaily"] = "Daily",
+        ["AutoBackupWeekly"] = "Weekly",
+        ["MsgAutoBackupCreated"] = "Automatic backup created.",
+        ["TourTitle"] = "PinQuick Tour",
+
+        ["TourStep1Title"] = "Search Box",
+        ["TourStep1Subtitle"] = "Instantly search pins by title, target or tags.",
+        ["TourStep2Title"] = "New Pin",
+        ["TourStep2Subtitle"] = "Pin files, folders, apps, websites and more with a single click.",
+        ["TourStep3Title"] = "Categories",
+        ["TourStep3Subtitle"] = "Filter all pins, favorites, recently used or broken pins here.",
+        ["TourStep4Title"] = "Collections",
+        ["TourStep4Subtitle"] = "Organize pins into meaningful groups; add, rename or delete collections.",
+        ["TourStep5Title"] = "Pins",
+        ["TourStep5Subtitle"] = "Double-click a pin to launch it, or right-click for advanced options.",
+        ["TourStep6Title"] = "Settings",
+        ["TourStep6Subtitle"] = "Manage theme, language, startup, system tray and the global shortcut here.",
+        ["TourStep7Title"] = "Menu",
+        ["TourStep7Subtitle"] = "Access backup, restore, export and import from here.",
+
+        ["TourNext"] = "Next",
+        ["TourFinish"] = "Finish",
+        ["TourClose"] = "Close",
+        ["TourSkip"] = "Skip",
     };
 }
 
@@ -312,15 +449,22 @@ public static class Strings
     public static string HeadMenuTooltip => Loc.T("HeadMenuTooltip");
     public static string MenuExport => Loc.T("MenuExport");
     public static string MenuImport => Loc.T("MenuImport");
-    public static string HeadRefreshTooltip => Loc.T("HeadRefreshTooltip");
+    public static string MenuBackup => Loc.T("MenuBackup");
+    public static string MenuRestore => Loc.T("MenuRestore");
+    public static string MenuShowTour => Loc.T("MenuShowTour");
     public static string HeadSettingsTooltip => Loc.T("HeadSettingsTooltip");
+    public static string HeadRefreshTooltip => Loc.T("HeadRefreshTooltip");
     public static string SearchPlaceholder => Loc.T("SearchPlaceholder");
+    public static string SearchHistoryLabel => Loc.T("SearchHistoryLabel");
+    public static string SearchHistoryClear => Loc.T("SearchHistoryClear");
 
     public static string SideCategories => Loc.T("SideCategories");
+    public static string SideRecent => Loc.T("SideRecent");
     public static string SideCollections => Loc.T("SideCollections");
     public static string SideToggleCollectionsTooltip => Loc.T("SideToggleCollectionsTooltip");
     public static string SideNewCollectionTooltip => Loc.T("SideNewCollectionTooltip");
     public static string SideDeleteCollectionTooltip => Loc.T("SideDeleteCollectionTooltip");
+    public static string SideEditCollectionTooltip => Loc.T("SideEditCollectionTooltip");
     public static string SideAbout => Loc.T("SideAbout");
     public static string SideAboutTooltip => Loc.T("SideAboutTooltip");
     public static string GridReorderTooltip => Loc.T("GridReorderTooltip");
@@ -335,6 +479,7 @@ public static class Strings
     public static string DetailOpenLocation => Loc.T("DetailOpenLocation");
     public static string DetailEdit => Loc.T("DetailEdit");
     public static string DetailDelete => Loc.T("DetailDelete");
+    public static string BrokenBadgeTooltip => Loc.T("BrokenBadgeTooltip");
 
     public static string NewPinDialogTitle => Loc.T("NewPinDialogTitle");
     public static string SaveButton => Loc.T("SaveButton");
@@ -375,8 +520,23 @@ public static class Strings
     public static string LanguageTurkish => Loc.T("LanguageTurkish");
     public static string LanguageEnglish => Loc.T("LanguageEnglish");
     public static string StartupLabel => Loc.T("StartupLabel");
+    public static string CardSizeLabel => Loc.T("CardSizeLabel");
+    public static string CardSizeSmall => Loc.T("CardSizeSmall");
+    public static string CardSizeMedium => Loc.T("CardSizeMedium");
+    public static string CardSizeLarge => Loc.T("CardSizeLarge");
+    public static string MinimizeToTrayLabel => Loc.T("MinimizeToTrayLabel");
+    public static string GlobalHotkeyLabel => Loc.T("GlobalHotkeyLabel");
     public static string RestartButton => Loc.T("RestartButton");
 
     public static string CloseButton => Loc.T("CloseButton");
     public static string ErrorTitle => Loc.T("ErrorTitle");
+    public static string ThemeToggleTooltip => Loc.T("ThemeToggleTooltip");
+    public static string DragToCollection => Loc.T("DragToCollection");
+    public static string ExportFilterTitle => Loc.T("ExportFilterTitle");
+    public static string ExportFilterAll => Loc.T("ExportFilterAll");
+    public static string ExportFilterCurrent => Loc.T("ExportFilterCurrent");
+    public static string AutoBackupLabel => Loc.T("AutoBackupLabel");
+    public static string AutoBackupNone => Loc.T("AutoBackupNone");
+    public static string AutoBackupDaily => Loc.T("AutoBackupDaily");
+    public static string AutoBackupWeekly => Loc.T("AutoBackupWeekly");
 }

@@ -65,7 +65,7 @@ public sealed class ProcessLauncher
         var startInfo = pin.Type switch
         {
             PinType.Application or PinType.File => CreateApplicationStartInfo(pin, target),
-            PinType.Folder or PinType.NetworkPath => CreateExplorerStartInfo(pin, target),
+            PinType.Folder or PinType.NetworkPath => CreateExplorerStartInfo(target),
             PinType.Website or PinType.Url => CreateUrlStartInfo(pin, target),
             PinType.WindowsSetting => CreateUriStartInfo(target),
             PinType.SystemTool => CreateSystemToolStartInfo(pin, target),
@@ -101,14 +101,12 @@ public sealed class ProcessLauncher
         return startInfo;
     }
 
-    private static ProcessStartInfo CreateExplorerStartInfo(Pin pin, string target)
+    private static ProcessStartInfo CreateExplorerStartInfo(string target)
     {
-        var startInfo = new ProcessStartInfo("explorer.exe")
+        return new ProcessStartInfo(target)
         {
             UseShellExecute = true,
         };
-        startInfo.ArgumentList.Add($"\"{target}\"");
-        return startInfo;
     }
 
     private static ProcessStartInfo? CreateUrlStartInfo(Pin pin, string target)
@@ -171,16 +169,12 @@ public sealed class ProcessLauncher
             };
         }
 
-        var startInfo = new ProcessStartInfo("cmd.exe")
+        return new ProcessStartInfo("cmd.exe")
         {
             UseShellExecute = false,
             CreateNoWindow = false,
+            Arguments = $"/d /s /c \"{combined}\"",
         };
-
-        startInfo.ArgumentList.Add("/d");
-        startInfo.ArgumentList.Add("/c");
-        AppendCommand(startInfo, combined);
-        return startInfo;
     }
 
     private static ProcessStartInfo CreatePowerShellStartInfo(Pin pin, string target)
@@ -196,17 +190,12 @@ public sealed class ProcessLauncher
             };
         }
 
-        var startInfo = new ProcessStartInfo("powershell.exe")
+        return new ProcessStartInfo("powershell.exe")
         {
             UseShellExecute = false,
             CreateNoWindow = false,
+            Arguments = $"-NoExit -NoProfile -Command \"{CombineCommand(target, pin.Arguments)}\"",
         };
-
-        startInfo.ArgumentList.Add("-NoExit");
-        startInfo.ArgumentList.Add("-NoProfile");
-        startInfo.ArgumentList.Add("-Command");
-        AppendCommand(startInfo, CombineCommand(target, pin.Arguments));
-        return startInfo;
     }
 
     private static ProcessStartInfo? CreateBatchStartInfo(Pin pin, string target)
@@ -228,16 +217,12 @@ public sealed class ProcessLauncher
             };
         }
 
-        var startInfo = new ProcessStartInfo("cmd.exe")
+        return new ProcessStartInfo("cmd.exe")
         {
             UseShellExecute = false,
             CreateNoWindow = false,
+            Arguments = $"/d /s /c \"{combined}\"",
         };
-
-        startInfo.ArgumentList.Add("/d");
-        startInfo.ArgumentList.Add("/c");
-        AppendCommand(startInfo, combined);
-        return startInfo;
     }
 
     private static ProcessStartInfo? CreateCustomStartInfo(Pin pin)
@@ -252,11 +237,6 @@ public sealed class ProcessLauncher
             UseShellExecute = true,
             Verb = GetVerb(pin),
         };
-    }
-
-    private static void AppendCommand(ProcessStartInfo startInfo, string command)
-    {
-        startInfo.ArgumentList.Add($"\"{command}\"");
     }
 
     private static string CombineCommand(string command, string arguments)

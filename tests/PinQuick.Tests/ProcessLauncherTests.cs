@@ -91,7 +91,7 @@ public sealed class ProcessLauncherTests
     }
 
     [Fact]
-    public void BuildStartInfo_Command_UsesCmdWithArgumentList()
+    public void BuildStartInfo_Command_UsesCmdWithArgumentString()
     {
         var pin = new Pin
         {
@@ -105,7 +105,7 @@ public sealed class ProcessLauncherTests
         Assert.NotNull(info);
         Assert.Equal("cmd.exe", info!.FileName);
         Assert.False(info.UseShellExecute);
-        Assert.Contains(info.ArgumentList, argument => argument.Contains("ipconfig /all", StringComparison.Ordinal));
+        Assert.Contains("ipconfig /all", info.Arguments, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -151,7 +151,7 @@ public sealed class ProcessLauncherTests
     }
 
     [Fact]
-    public void BuildStartInfo_Folder_UsesExplorer()
+    public void BuildStartInfo_Folder_ShellExecutesFolderPath()
     {
         var pin = new Pin
         {
@@ -163,8 +163,67 @@ public sealed class ProcessLauncherTests
         var info = _launcher.BuildStartInfo(pin);
 
         Assert.NotNull(info);
-        Assert.Equal("explorer.exe", info!.FileName);
+        Assert.Equal(@"C:\Projects", info!.FileName);
         Assert.True(info.UseShellExecute);
+    }
+
+    [Fact]
+    public void BuildStartInfo_NetworkPath_ShellExecutesSharePath()
+    {
+        var pin = new Pin
+        {
+            Title = "Paylaşım",
+            Type = PinType.NetworkPath,
+            Target = @"\\server\share",
+        };
+
+        var info = _launcher.BuildStartInfo(pin);
+
+        Assert.NotNull(info);
+        Assert.Equal(@"\\server\share", info!.FileName);
+        Assert.True(info.UseShellExecute);
+    }
+
+    [Fact]
+    public void BuildStartInfo_Batch_QuotesCommandLine()
+    {
+        var batchPath = Path.Combine(Path.GetTempPath(), $"pinquick-test-{Guid.NewGuid():N}.bat");
+        File.WriteAllText(batchPath, "@echo off\r\n");
+        try
+        {
+            var pin = new Pin
+            {
+                Title = "Test script",
+                Type = PinType.Batch,
+                Target = batchPath,
+                Arguments = "arg1",
+            };
+
+            var info = _launcher.BuildStartInfo(pin);
+
+            Assert.NotNull(info);
+            Assert.Equal("cmd.exe", info!.FileName);
+            Assert.False(info.UseShellExecute);
+            Assert.Contains(batchPath, info.Arguments, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("arg1", info.Arguments, StringComparison.Ordinal);
+        }
+        finally
+        {
+            File.Delete(batchPath);
+        }
+    }
+
+    [Fact]
+    public void BuildStartInfo_Batch_MissingFile_ReturnsNull()
+    {
+        var pin = new Pin
+        {
+            Title = "Yok script",
+            Type = PinType.Batch,
+            Target = @"C:\nonexistent\script.bat",
+        };
+
+        Assert.Null(_launcher.BuildStartInfo(pin));
     }
 
     [Fact]

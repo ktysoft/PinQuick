@@ -3,6 +3,61 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [Unreleased]
+
+### Eklendi
+
+- Sistem tepsisi desteği: pencere kapatıldığında/minimize edilirken tepsiye küçültme,
+  tepsi menüsünden gösterme/çıkış ve uygulama ikonu
+- Global kısayol: ayardan etkinleştirilince `Ctrl+Space` ile pencere gösterilir/gizlenir
+- "Son Kullanılanlar" filtresi (son açılış zamanına göre sıralı)
+- "Bozuk Pinler" filtresi ve kartlarda erişilemeyen hedefler için uyarı rozeti
+- Kart boyutu seçimi (Küçük / Orta / Büyük): başlık çubuğundaki simge butondan
+  anında değiştirilir
+- Veri yedekleme/geri yükleme (ZIP): `%LOCALAPPDATA%\PinQuick\Backup\`
+  ve menüden "Yedek Al / Yedekten Geri Yükle"
+- Sağ tık menüsüne "Koleksiyona Ekle" alt menüsü ve seçili koleksiyonu
+  yeniden adlandırma butonu (sesli)
+- İlk açılışta otomatik başlayan, menüden veya ayarlardan "Eğitimi Göster" ile
+  yeniden çağrılabilen adım adım arayüz eğitimi (teaching tips)
+- Detay panelinde pinin son kullanım zamanı
+- Başlık çubuğunda tek tıkla tema değiştirici (Koyu / Açık / Sistem)
+- Çoklu pin seçimi (Ctrl+Click) ve seçilenlere toplu "Koleksiyona Ekle" /
+  toplu silme işlemleri
+- Pin kartlarını sürükleyip bırakarak doğrudan koleksiyona ekleme
+- Sidebar'da son kullanılan pinlerin hızlı erişim listesi
+- Arama geçmişi: arama kutusu odaklanınca son aramalar önerisi ve
+  geçmişi temizleme
+- Dışa aktarma öncesi "Tüm pinler / Mevcut filtre" seçimi
+- Kart açıklamalarında Markdown düz metin görünümü
+- Otomatik veri yedekleme (Yok / Günlük / Haftalık) ayarı
+- Eğitim turunda ve metin kutusunda Escape ile kapatma
+- "Hakkında" iletişim kutusunda web sitesi ve e-posta adresleri tıklanabilir
+  bağlantı olarak açılır
+
+### Değişti
+
+- "Açma Konumu" ve "Yönetici Olarak Çalıştır" butonları yalnızca pin türüne
+  uygun olduğunda etkinleştirilir
+- Koleksiyon iletişim kutusu artık adlandırma/açıklama düzenleme modlarını
+  destekler
+
+### Düzeltildi
+
+- Klasör ve ağ (UNC) pinleri artık çift tıklandığında doğru hedefi açıyor.
+  Daha önce `explorer.exe` üzerinden başlatma bazı durumlarda yanlışlıkla
+  Belgeler klasörünü açabiliyordu; artık hedef doğrudan Windows kabuğuyla
+  açılıyor.
+- Program ilk kez çalışırken pinlerin yüklenmesi devam ederken yapılan
+  sürükle-bırak eklemelerinin listede görünmemesi sorunu giderildi.
+- Sürükle-bırak ile gelen `.ps1` dosyaları artık "Dosya" yerine
+  "PowerShell" pin türüyle ekleniyor.
+- Komut, PowerShell ve batch pinleri için komut satırı oluşturma daha
+  güvenilir hale getirildi (yol ve boşluk içeren komutlarda hatalı çift
+  tırnak kullanımı giderildi).
+- Pencere boyutu ve büyütülmüş (maximize) durumu artık hatırlanıyor;
+  uygulama açıldığında son ayar geri yükleniyor.
+
 ## [0.4.0] - 2026-09-08
 
 ### Değişti

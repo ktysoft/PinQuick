@@ -5,15 +5,23 @@ using PinQuick.App.Services;
 namespace PinQuick.App.Dialogs;
 
 /// <summary>
-/// Koleksiyon oluşturma iletişim kutusu.
+/// Koleksiyon oluşturma veya yeniden adlandırma iletişim kutusu.
 /// </summary>
 public sealed partial class CollectionDialog : ContentDialog
 {
     public string? ResultName { get; private set; }
 
-    public CollectionDialog()
+    public CollectionDialog(string? existingName = null)
     {
         InitializeComponent();
+
+        if (existingName is not null)
+        {
+            Title = Loc.T("EditCollectionTitle");
+            PrimaryButtonText = Loc.T("SaveButton");
+            NameBox.Text = existingName;
+        }
+
         PrimaryButtonClick += OnPrimaryButtonClick;
     }
 

@@ -19,6 +19,30 @@ public sealed class AppSettings
 
     public bool RunAtStartup { get; set; }
 
+    public string CardSize { get; set; } = "Medium";
+
+    public bool MinimizeToTray { get; set; }
+
+    public bool GlobalHotkeyEnabled { get; set; }
+
+    public bool IsOnboardingCompleted { get; set; }
+
+    public int? WindowWidth { get; set; }
+
+    public int? WindowHeight { get; set; }
+
+    public bool WindowMaximized { get; set; }
+
+    public int? WindowPositionX { get; set; }
+
+    public int? WindowPositionY { get; set; }
+
+    public string AutoBackupFrequency { get; set; } = "Off";
+
+    public DateTime? LastAutoBackupAt { get; set; }
+
+    public List<string> SearchHistory { get; set; } = new();
+
     private static AppSettings? _instance;
 
     public static AppSettings Current => _instance ??= Load();

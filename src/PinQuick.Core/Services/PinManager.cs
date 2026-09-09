@@ -68,9 +68,6 @@ public sealed class PinManager
 
     public Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default)
         => _repository.ClearCollectionAsync(collectionId, cancellationToken);
-
-    public Task<IReadOnlyList<Pin>> SearchAsync(string query, CancellationToken cancellationToken = default)
-        => _repository.SearchAsync(query, cancellationToken);
 }
 
 public sealed class DuplicatePinException(Pin duplicate) : Exception("Bu öğe zaten pinlenmiş.")

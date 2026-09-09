@@ -60,6 +60,12 @@ public sealed partial class MainViewModel : ObservableObject
     public partial PinItemViewModel? SelectedPin { get; set; }
 
     [ObservableProperty]
+    public partial ObservableCollection<PinItemViewModel> RecentPins { get; set; } = new();
+
+    [ObservableProperty]
+    public partial PinItemViewModel? SelectedRecentPin { get; set; }
+
+    [ObservableProperty]
     public partial ElementTheme RequestedTheme { get; set; } = ElementTheme.Default;
 
     [ObservableProperty]
@@ -82,6 +88,11 @@ public sealed partial class MainViewModel : ObservableObject
 
         foreach (var filter in Enum.GetValues<PinFilter>())
         {
+            if (filter == PinFilter.WindowsSettings)
+            {
+                continue;
+            }
+
             Filters.Add(new SidebarFilterItemViewModel(filter));
         }
 
@@ -89,7 +100,31 @@ public sealed partial class MainViewModel : ObservableObject
         SetTheme(AppSettings.Current.Theme);
     }
 
-    partial void OnSearchQueryChanged(string value) => ApplyFilter();
+    partial void OnSearchQueryChanged(string value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            RecordSearch(value.Trim());
+        }
+
+        ApplyFilter();
+    }
+
+    private void RecordSearch(string query)
+    {
+        var settings = AppSettings.Current;
+        var history = settings.SearchHistory;
+        history.RemoveAll(q => string.Equals(q, query, StringComparison.CurrentCultureIgnoreCase));
+        history.Insert(0, query);
+
+        const int maxEntries = 10;
+        if (history.Count > maxEntries)
+        {
+            history.RemoveRange(maxEntries, history.Count - maxEntries);
+        }
+
+        settings.Save();
+    }
 
     partial void OnCurrentFilterChanged(PinFilter value) => ApplyFilter();
 
@@ -103,14 +138,29 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnSelectedCollectionChanged(Collection? value) => ApplyFilter();
 
-    [RelayCommand]
-    private async Task LoadAsync()
+    partial void OnSelectedRecentPinChanged(PinItemViewModel? value)
     {
-        if (IsLoading)
+        if (value is null)
         {
             return;
         }
 
+        if (SelectedCollection is not null)
+        {
+            SelectedCollection = null;
+        }
+
+        if (CurrentFilter != PinFilter.All)
+        {
+            CurrentFilter = PinFilter.All;
+        }
+
+        SelectedPin = value;
+    }
+
+    [RelayCommand]
+    private async Task LoadAsync()
+    {
         IsLoading = true;
         try
         {
@@ -118,6 +168,7 @@ public sealed partial class MainViewModel : ObservableObject
             var pins = await _pinManager.GetAllAsync();
             _allPins = pins.ToList();
             ApplyFilter();
+            RefreshRecentPins();
         }
         finally
         {
@@ -152,9 +203,11 @@ public sealed partial class MainViewModel : ObservableObject
             pinned = pinned.Where(pin => MatchesQuery(pin, query));
         }
 
-        var sorted = pinned
-            .OrderBy(pin => pin.SortOrder)
-            .ThenBy(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase);
+        var sorted = CurrentFilter == PinFilter.Recent
+            ? pinned.OrderByDescending(pin => pin.LastUsedAt ?? DateTime.MinValue)
+            : pinned
+                .OrderBy(pin => pin.SortOrder)
+                .ThenBy(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase);
 
         var canReorder = CurrentFilter == PinFilter.All
             && SelectedCollection is null
@@ -173,6 +226,25 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         StatusMessage = Pins.Count == 0 && _allPins.Count > 0 ? Loc.T("MsgNoPinsFound") : string.Empty;
+    }
+
+    private void RefreshRecentPins()
+    {
+        RecentPins.Clear();
+
+        if (_allPins is null)
+        {
+            return;
+        }
+
+        const int maxRecent = 5;
+        foreach (var pin in _allPins
+                     .Where(p => p.LastUsedAt.HasValue)
+                     .OrderByDescending(p => p.LastUsedAt)
+                     .Take(maxRecent))
+        {
+            RecentPins.Add(new PinItemViewModel(pin));
+        }
     }
 
     private async void OnToggleFavoriteRequested(PinItemViewModel item)
@@ -205,6 +277,12 @@ public sealed partial class MainViewModel : ObservableObject
         PinItemViewModel.ClearIconCache();
         await LoadAsync();
     }
+
+    /// <summary>
+    /// Mevcut filtre, arama ve koleksiyon koşullarını koruyarak kart listesini yeniden
+    /// oluşturur. Kart boyutu gibi UI değerlerinin yansıması için kullanılır.
+    /// </summary>
+    public void RecreatePins() => ApplyFilter();
 
     [RelayCommand]
     private void ClearSelection()
@@ -278,6 +356,16 @@ public sealed partial class MainViewModel : ObservableObject
         pin.UseCount++;
         await PersistPinAsync(pin);
         StatusMessage = string.Empty;
+        RefreshRecentPins();
+
+        if (CurrentFilter == PinFilter.Recent)
+        {
+            var selectedId = SelectedPin?.Id;
+            ApplyFilter();
+            SelectedPin = selectedId is long id
+                ? Pins.FirstOrDefault(item => item.Id == id)
+                : null;
+        }
     }
 
     private async Task PersistPinAsync(Pin pin)
@@ -302,13 +390,7 @@ public sealed partial class MainViewModel : ObservableObject
         var locationPin = new Pin
         {
             Title = pin.Title,
-            Type = pin.Type switch
-            {
-                PinType.Application or PinType.File =>
-                    Path.HasExtension(pin.Target) ? PinType.Folder : PinType.Folder,
-                PinType.Folder or PinType.NetworkPath => PinType.Folder,
-                _ => PinType.Folder,
-            },
+            Type = PinType.Folder,
             Target = GetFolderTarget(pin),
         };
 
@@ -320,6 +402,20 @@ public sealed partial class MainViewModel : ObservableObject
                 : $"{Loc.T("MsgOpenLocationFailed")}: {result.ErrorMessage}";
         }
     }
+
+    /// <summary>
+    /// Bir pinin hedefinin dosya sistemi üzerinde kullanılabilir olup olmadığını tip bilgisiyle birlikte değerlendirir.
+    /// Yalnızca fiziksel hedefe sahip pin türleri için "konumu aç" anlamlıdır.
+    /// </summary>
+    public static bool CanOpenLocation(Pin pin)
+        => pin.Type is PinType.Application or PinType.File or PinType.Folder
+            or PinType.NetworkPath or PinType.Batch or PinType.PowerShell or PinType.SystemTool;
+
+    /// <summary>
+    /// Yönetici yetkisi gerektirebilecek pin türleri.
+    /// </summary>
+    public static bool CanRunAsAdmin(Pin pin)
+        => pin.Type is PinType.Application or PinType.Command or PinType.PowerShell or PinType.Batch;
 
     private static string GetFolderTarget(Pin pin)
     {
@@ -467,6 +563,78 @@ public sealed partial class MainViewModel : ObservableObject
         await LoadCollectionsAsync();
     }
 
+    public async Task UpdateCollectionAsync(Collection collection, string newName)
+    {
+        if (collection is null || string.IsNullOrWhiteSpace(newName))
+        {
+            return;
+        }
+
+        var existing = await _collectionManager.GetAllAsync();
+        if (existing.Any(c =>
+                c.Id != collection.Id
+                && string.Equals(c.Name.Trim(), newName.Trim(), StringComparison.CurrentCultureIgnoreCase)))
+        {
+            StatusMessage = Loc.T("MsgCollectionExists");
+            return;
+        }
+
+        var selectedId = SelectedCollection?.Id;
+        collection.Name = newName.Trim();
+        await _collectionManager.UpdateAsync(collection);
+        await LoadCollectionsAsync();
+        SelectedCollection = selectedId is long id
+            ? Collections.FirstOrDefault(c => c.Id == id)
+            : null;
+        ApplyFilter();
+    }
+
+    public async Task AssignPinToCollectionAsync(Pin pin, long? collectionId)
+    {
+        if (pin is null)
+        {
+            return;
+        }
+
+        pin.CollectionId = collectionId;
+        await _pinManager.UpdateAsync(pin);
+        ApplyFilter();
+    }
+
+    public async Task AssignSelectedToCollectionAsync(IReadOnlyList<long> ids, long? collectionId)
+    {
+        if (ids is null || ids.Count == 0 || _allPins is null)
+        {
+            return;
+        }
+
+        var idSet = ids.ToHashSet();
+        foreach (var pin in _allPins.Where(p => idSet.Contains(p.Id)))
+        {
+            pin.CollectionId = collectionId;
+            await _pinManager.UpdateAsync(pin);
+        }
+
+        ApplyFilter();
+    }
+
+    public async Task DeleteSelectedAsync(IReadOnlyList<long> ids)
+    {
+        if (ids is null || ids.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var id in ids)
+        {
+            await _pinManager.DeleteAsync(id);
+            _allPins?.RemoveAll(pin => pin.Id == id);
+        }
+
+        SelectedPin = null;
+        ApplyFilter();
+    }
+
     public async Task DeleteCollectionAsync(Collection collection)
     {
         if (collection is null || collection.Id == 0)
@@ -524,7 +692,7 @@ public sealed partial class MainViewModel : ObservableObject
         return added;
     }
 
-    public async Task ExportAsync(string filePath)
+    public async Task ExportAsync(string filePath, PinFilter? filter = null, Collection? collection = null)
     {
         if (string.IsNullOrWhiteSpace(filePath))
         {
@@ -532,15 +700,33 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         var pins = await _pinManager.GetAllAsync();
-        var json = PinExportService.Export(pins);
+        IEnumerable<Pin> selected = pins;
+
+        if (filter is not null && filter != PinFilter.All)
+        {
+            selected = selected.Where(pin => PinFilterMapping.Matches(pin, filter.Value));
+        }
+
+        if (collection is not null && collection.Id != 0)
+        {
+            selected = selected.Where(pin => pin.CollectionId == collection.Id);
+        }
+
+        var list = selected.ToList();
+        var json = PinExportService.Export(list);
         await File.WriteAllTextAsync(filePath, json);
-        if (pins.Count == 0)
+
+        if (list.Count == 0)
         {
             StatusMessage = Loc.T("MsgExportNothing");
         }
+        else if (filter is not null || collection is not null)
+        {
+            StatusMessage = string.Format(Loc.T("MsgExportFiltered"), list.Count);
+        }
         else
         {
-            StatusMessage = string.Format(Loc.T("MsgExportDone"), pins.Count);
+            StatusMessage = string.Format(Loc.T("MsgExportDone"), list.Count);
         }
     }
 }

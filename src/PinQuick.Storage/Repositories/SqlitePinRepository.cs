@@ -208,40 +208,6 @@ public sealed class SqlitePinRepository : IPinRepository
         return await reader.ReadAsync(cancellationToken) ? ReadPin(reader) : null;
     }
 
-    public async Task<IReadOnlyList<Pin>> SearchAsync(string query, CancellationToken cancellationToken = default)
-    {
-        await using var connection = new SqliteConnection(_connectionString);
-        await connection.OpenAsync(cancellationToken);
-
-        using var command = connection.CreateCommand();
-        command.CommandText =
-            """
-            SELECT Id, Title, Description, Type, Target, Arguments, WorkingDirectory, Icon,
-                   CollectionId, IsFavorite, IsEnabled, CreatedAt, UpdatedAt, LastUsedAt,
-                   UseCount, SortOrder, Tags, RunAsAdministrator, OpenWith, CustomColor, CustomShortcut
-            FROM Pins
-            WHERE Title LIKE $term COLLATE NOCASE
-               OR Description LIKE $term COLLATE NOCASE
-               OR Tags LIKE $term COLLATE NOCASE
-               OR Target LIKE $term COLLATE NOCASE
-               OR Type = $type
-            ORDER BY IsFavorite DESC,
-                     CASE WHEN Title LIKE $term COLLATE NOCASE THEN 0 ELSE 1 END,
-                     Title COLLATE NOCASE ASC
-            """;
-        command.Parameters.AddWithValue("$term", $"%{query}%");
-        command.Parameters.AddWithValue("$type", TryParsePinType(query));
-
-        var pins = new List<Pin>();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            pins.Add(ReadPin(reader));
-        }
-
-        return pins;
-    }
-
     public async Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqliteConnection(_connectionString);
@@ -309,9 +275,4 @@ public sealed class SqlitePinRepository : IPinRepository
         => DateTime.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var parsed)
             ? parsed
             : DateTime.MinValue;
-
-    private static int TryParsePinType(string value)
-    {
-        return Enum.TryParse<PinType>(value, ignoreCase: true, out var result) ? (int)result : -1;
-    }
 }

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using PinQuick.Core.Models;
+using PinQuick.Core.Security;
 using PinQuick.App.Services;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
@@ -13,6 +14,8 @@ public enum PinFilter
 {
     All,
     Favorites,
+    Recent,
+    Broken,
     Applications,
     Folders,
     Files,
@@ -36,6 +39,7 @@ public sealed partial class PinItemViewModel : ObservableObject
     public string Target => Pin.Target;
     public string Description => Pin.Description;
     public string Tags => Pin.Tags;
+    public DateTime? LastUsedAt => Pin.LastUsedAt;
 
     public bool IsFavorite
     {
@@ -58,7 +62,49 @@ public sealed partial class PinItemViewModel : ObservableObject
 
     public bool HasIconSource => IconSource is not null;
 
+    /// <summary>
+    /// Pinin hedefi şu an erişilemez veya geçersiz ise <c>true</c> (bozuk pin).
+    /// </summary>
+    public bool IsBroken => PinHealth.IsBroken(Pin);
+
+    /// <summary>
+    /// Uygulama ayarına göre kart genişliği. Ayar değişince liste yeniden oluşturulur.
+    /// </summary>
+    public double CardWidth => AppSettings.Current.CardSize switch
+    {
+        "Small" => 160,
+        "Large" => 260,
+        _ => 200,
+    };
+
+    /// <summary>
+    /// Uygulama ayarına göre kart yüksekliği.
+    /// </summary>
+    public double CardHeight => AppSettings.Current.CardSize switch
+    {
+        "Small" => 120,
+        "Large" => 190,
+        _ => 150,
+    };
+
     public Action<PinItemViewModel>? ToggleFavoriteRequested { get; set; }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected == value)
+            {
+                return;
+            }
+
+            _isSelected = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private bool _isSelected;
 
     [RelayCommand]
     private void ToggleFavorite()
@@ -187,6 +233,8 @@ public static class PinFilterMapping
         {
             PinFilter.All => true,
             PinFilter.Favorites => pin.IsFavorite,
+            PinFilter.Recent => pin.LastUsedAt.HasValue,
+            PinFilter.Broken => PinHealth.IsBroken(pin),
             PinFilter.Applications => pin.Type == PinType.Application,
             PinFilter.Folders => pin.Type == PinType.Folder,
             PinFilter.Files => pin.Type == PinType.File,
@@ -202,6 +250,8 @@ public static class PinFilterMapping
         {
             PinFilter.All => Loc.T("FilterAll"),
             PinFilter.Favorites => Loc.T("FilterFavorites"),
+            PinFilter.Recent => Loc.T("FilterRecent"),
+            PinFilter.Broken => Loc.T("FilterBroken"),
             PinFilter.Applications => Loc.T("FilterApplications"),
             PinFilter.Folders => Loc.T("FilterFolders"),
             PinFilter.Files => Loc.T("FilterFiles"),
@@ -217,6 +267,8 @@ public static class PinFilterMapping
         {
             PinFilter.All => "\uE8A5",
             PinFilter.Favorites => "\uE734",
+            PinFilter.Recent => "\uE823",
+            PinFilter.Broken => "\uE7BA",
             PinFilter.Applications => "\uE7F4",
             PinFilter.Folders => "\uE8B7",
             PinFilter.Files => "\uE7C3",

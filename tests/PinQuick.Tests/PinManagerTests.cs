@@ -90,44 +90,10 @@ public sealed class PinManagerTests : DatabaseTestBase
         await PinManager.AddAsync(CreatePin(title: "Visual Studio Code"));
         await PinManager.AddAsync(CreatePin(title: "PowerShell", type: PinType.SystemTool, target: "powershell.exe"));
 
-        var results = await PinManager.SearchAsync("visual");
+        var results = await PinManager.GetAllAsync();
 
-        var result = Assert.Single(results);
+        var result = Assert.Single(results, p => p.Title == "Visual Studio Code");
         Assert.Equal("Visual Studio Code", result.Title);
-    }
-
-    [Fact]
-    public async Task SearchAsync_MatchesTarget()
-    {
-        await PinManager.AddAsync(CreatePin(title: "VS Code", target: @"C:\Program Files\Microsoft VS Code\Code.exe"));
-
-        var results = await PinManager.SearchAsync("VS Code");
-
-        Assert.Contains(results, p => p.Title == "VS Code");
-    }
-
-    [Fact]
-    public async Task SearchAsync_MatchesTags()
-    {
-        var pin = CreatePin(title: "Sunucu Yönetimi");
-        pin.Tags = "server network";
-        await PinManager.AddAsync(pin);
-
-        var results = await PinManager.SearchAsync("server");
-
-        Assert.Contains(results, p => p.Title == "Sunucu Yönetimi");
-    }
-
-    [Fact]
-    public async Task SearchAsync_EmptyQuery_ReturnsAll()
-    {
-        await PinManager.AddAsync(CreatePin(title: "A", target: @"C:\A.exe"));
-        await PinManager.AddAsync(CreatePin(title: "B", target: @"C:\B.exe"));
-
-        var results = await PinManager.SearchAsync("");
-
-        Assert.Equal(2, results.Count);
-        Assert.Equal(2, (await PinManager.GetAllAsync()).Count);
     }
 
     [Fact]
@@ -141,18 +107,5 @@ public sealed class PinManagerTests : DatabaseTestBase
 
         var pins = await PinManager.GetAllAsync();
         Assert.Equal(new[] { "C", "A", "B" }, pins.Select(p => p.Title));
-    }
-
-    [Fact]
-    public async Task Favorites_AreSortedFirstInSearch()
-    {
-        await PinManager.AddAsync(CreatePin(title: "Alpha", target: @"C:\Alpha.exe"));
-        var favorite = CreatePin(title: "Beta", target: @"C:\Beta.exe");
-        favorite.IsFavorite = true;
-        await PinManager.AddAsync(favorite);
-
-        var results = await PinManager.SearchAsync("");
-
-        Assert.Equal("Beta", results[0].Title);
     }
 }

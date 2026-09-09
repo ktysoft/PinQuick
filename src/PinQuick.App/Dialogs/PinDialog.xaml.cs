@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Windows.Storage.Pickers;
 using PinQuick.Core.Models;
+using PinQuick.Core.Security;
 using PinQuick.App.Services;
 using PinQuick.App.ViewModels;
 
@@ -52,6 +53,10 @@ public sealed partial class PinDialog : ContentDialog
     }
 
     private Pin? _editing;
+
+    private bool _missingTargetConfirmed;
+
+    private void TargetBox_TextChanged(object sender, TextChangedEventArgs e) => _missingTargetConfirmed = false;
 
     private void TypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -169,6 +174,40 @@ public sealed partial class PinDialog : ContentDialog
             return;
         }
 
+        if (type is PinType.Website or PinType.Url && !PathValidation.IsValidUrl(target))
+        {
+            ShowError(Loc.T("ValidationInvalidUrl"), args);
+            return;
+        }
+
+        if (type is PinType.WindowsSetting && !PathValidation.IsValidWindowsUri(target))
+        {
+            ShowError(Loc.T("ValidationInvalidMsSettings"), args);
+            return;
+        }
+
+        if (type is PinType.NetworkPath
+            && !target.StartsWith(@"\\", StringComparison.Ordinal)
+            && !target.StartsWith("//", StringComparison.Ordinal))
+        {
+            ShowError(Loc.T("ValidationInvalidNetworkPath"), args);
+            return;
+        }
+
+        if (type is PinType.Application or PinType.File or PinType.Folder
+            or PinType.Batch or PinType.SystemTool or PinType.PowerShell)
+        {
+            var missing = PinHealth.IsBroken(new Pin { Type = type, Target = target });
+            if (missing && !_missingTargetConfirmed)
+            {
+                _missingTargetConfirmed = true;
+                ShowError(Loc.T("ValidationTargetMissing"), args);
+                return;
+            }
+        }
+
+        _missingTargetConfirmed = false;
+
         Result = new Pin
         {
             Id = _editing?.Id ?? 0,
@@ -189,6 +228,9 @@ public sealed partial class PinDialog : ContentDialog
             LastUsedAt = _editing?.LastUsedAt,
             UseCount = _editing?.UseCount ?? 0,
             SortOrder = _editing?.SortOrder ?? 0,
+            OpenWith = _editing?.OpenWith ?? string.Empty,
+            CustomColor = _editing?.CustomColor ?? string.Empty,
+            CustomShortcut = _editing?.CustomShortcut ?? string.Empty,
         };
     }
 

@@ -32,5 +32,25 @@
         <ToggleSwitch x:Name="StartupToggle"
                       Header="{x:Bind svc:Strings.StartupLabel}"
                       HorizontalAlignment="Left" />
+
+        <ToggleSwitch x:Name="MinimizeToTrayToggle"
+                      Header="{x:Bind svc:Strings.MinimizeToTrayLabel}"
+                      HorizontalAlignment="Left" />
+
+        <ToggleSwitch x:Name="GlobalHotkeyToggle"
+                      Header="{x:Bind svc:Strings.GlobalHotkeyLabel}"
+                      HorizontalAlignment="Left" />
+
+        <TextBlock Text="{x:Bind svc:Strings.AutoBackupLabel}" FontWeight="SemiBold" />
+        <ComboBox x:Name="AutoBackupCombo"
+                  HorizontalAlignment="Stretch">
+            <ComboBoxItem Content="{x:Bind svc:Strings.AutoBackupNone}" />
+            <ComboBoxItem Content="{x:Bind svc:Strings.AutoBackupDaily}" />
+            <ComboBoxItem Content="{x:Bind svc:Strings.AutoBackupWeekly}" />
+        </ComboBox>
+
+        <Button Content="{x:Bind svc:Strings.MenuShowTour}"
+                HorizontalAlignment="Left"
+                Click="ShowTourButton_Click" />
     </StackPanel>
 </ContentDialog>

@@ -15,13 +15,20 @@
         <conv:BoolToVisibilityConverter x:Key="BoolToVisibility" />
 
         <DataTemplate x:Key="PinCardTemplate" x:DataType="vm:PinItemViewModel">
-            <Grid Width="200" Height="150"
+            <Grid Width="{x:Bind CardWidth}" Height="{x:Bind CardHeight}"
                   Padding="14"
                   Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                   BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                   BorderThickness="1"
                   CornerRadius="10"
+                  CanDrag="True"
+                  DragStarting="PinCard_DragStarting"
                   RightTapped="PinCard_RightTapped">
+                <Grid.Transitions>
+                    <TransitionCollection>
+                        <ContentThemeTransition />
+                    </TransitionCollection>
+                </Grid.Transitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -41,6 +48,14 @@
                            Height="30"
                            Stretch="Uniform"
                            Visibility="{x:Bind HasIconSource, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                    <FontIcon Glyph="&#xE7BA;"
+                              FontSize="16"
+                              HorizontalAlignment="Left"
+                              VerticalAlignment="Top"
+                              Margin="0,-6,0,0"
+                              Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                              ToolTipService.ToolTip="{x:Bind svc:Strings.BrokenBadgeTooltip}"
+                              Visibility="{x:Bind IsBroken, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                 </Grid>
 
                 <Button Grid.Column="1"
@@ -88,13 +103,31 @@
         </DataTemplate>
 
         <DataTemplate x:Key="CollectionTemplate" x:DataType="mdl:Collection">
-            <Grid ColumnSpacing="10">
+            <Grid ColumnSpacing="10"
+                  AllowDrop="True"
+                  DragOver="CollectionItem_DragOver"
+                  Drop="CollectionItem_Drop"
+                  Tag="{x:Bind Id}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <FontIcon Glyph="&#xE8B7;" FontSize="16" />
                 <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" />
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="RecentPinTemplate" x:DataType="vm:PinItemViewModel">
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <FontIcon Glyph="{x:Bind IconGlyph}" FontSize="16" />
+                <TextBlock Grid.Column="1"
+                           Text="{x:Bind Title}"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis" />
             </Grid>
         </DataTemplate>
     </Page.Resources>
@@ -107,6 +140,7 @@
         <KeyboardAccelerator Key="R" Modifiers="Control" Invoked="RefreshAccelerator_Invoked" />
         <KeyboardAccelerator Key="F2" Invoked="EditAccelerator_Invoked" />
         <KeyboardAccelerator Key="Delete" Invoked="DeleteAccelerator_Invoked" />
+        <KeyboardAccelerator Key="Escape" Invoked="EscapeAccelerator_Invoked" />
     </Page.KeyboardAccelerators>
 
     <Grid x:Name="RootGrid"
@@ -130,6 +164,8 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" VerticalAlignment="Center">
@@ -143,13 +179,15 @@
                      Margin="16,0,0,0"
                      VerticalAlignment="Center"
                      PlaceholderText="{x:Bind svc:Strings.SearchPlaceholder}"
-                     Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay}">
+                     Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay}"
+                     GotFocus="SearchBox_GotFocus">
                 <TextBox.KeyboardAccelerators>
                     <KeyboardAccelerator Key="Escape" Invoked="ClearSearch_Invoked" />
                 </TextBox.KeyboardAccelerators>
             </TextBox>
 
-            <Button Grid.Column="3"
+            <Button x:Name="NewPinButton"
+                    Grid.Column="3"
                     VerticalAlignment="Center"
                     Style="{StaticResource AccentButtonStyle}"
                     Click="NewPinButton_Click">
@@ -159,26 +197,71 @@
                 </StackPanel>
             </Button>
 
-            <Button Grid.Column="4"
+            <Button x:Name="CardSizeButton"
+                    Grid.Column="4"
+                    VerticalAlignment="Center"
+                    ToolTipService.ToolTip="{x:Bind svc:Strings.CardSizeLabel}">
+                <Button.Flyout>
+                    <Flyout Opened="CardSizeFlyout_Opened">
+                        <StackPanel Spacing="6" MinWidth="140">
+                            <RadioButton x:Name="CardSizeSmallRadio"
+                                         GroupName="CardSize"
+                                         Tag="Small"
+                                         Checked="CardSizeRadio_Checked">
+                                <TextBlock Text="{x:Bind svc:Strings.CardSizeSmall}" />
+                            </RadioButton>
+                            <RadioButton x:Name="CardSizeMediumRadio"
+                                         GroupName="CardSize"
+                                         Tag="Medium"
+                                         Checked="CardSizeRadio_Checked">
+                                <TextBlock Text="{x:Bind svc:Strings.CardSizeMedium}" />
+                            </RadioButton>
+                            <RadioButton x:Name="CardSizeLargeRadio"
+                                         GroupName="CardSize"
+                                         Tag="Large"
+                                         Checked="CardSizeRadio_Checked">
+                                <TextBlock Text="{x:Bind svc:Strings.CardSizeLarge}" />
+                            </RadioButton>
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+                <FontIcon Glyph="&#xE8C7;" FontSize="14" />
+            </Button>
+
+            <Button x:Name="SettingsButton"
+                    Grid.Column="5"
                     VerticalAlignment="Center"
                     ToolTipService.ToolTip="{x:Bind svc:Strings.HeadSettingsTooltip}"
                     Click="SettingsButton_Click">
                 <FontIcon Glyph="&#xE713;" FontSize="14" />
             </Button>
 
-            <Button Grid.Column="5"
+            <Button x:Name="MenuButton"
+                    Grid.Column="6"
                     VerticalAlignment="Center"
                     ToolTipService.ToolTip="{x:Bind svc:Strings.HeadMenuTooltip}">
                 <Button.Flyout>
                     <MenuFlyout>
                         <MenuFlyoutItem Text="{x:Bind svc:Strings.MenuExport}" Click="ExportMenuItem_Click" />
                         <MenuFlyoutItem Text="{x:Bind svc:Strings.MenuImport}" Click="ImportMenuItem_Click" />
+                        <MenuFlyoutSeparator />
+                        <MenuFlyoutItem Text="{x:Bind svc:Strings.MenuBackup}" Click="BackupMenuItem_Click" />
+                        <MenuFlyoutItem Text="{x:Bind svc:Strings.MenuRestore}" Click="RestoreMenuItem_Click" />
                     </MenuFlyout>
                 </Button.Flyout>
                 <FontIcon Glyph="&#xE8E8;" FontSize="14" />
             </Button>
 
-            <Button Grid.Column="6"
+            <Button x:Name="ThemeToggleButton"
+                    Grid.Column="7"
+                    VerticalAlignment="Center"
+                    ToolTipService.ToolTip="{x:Bind svc:Strings.ThemeToggleTooltip}"
+                    Click="ThemeToggleButton_Click">
+                <FontIcon x:Name="ThemeToggleIcon" Glyph="&#xE771;" FontSize="14" />
+            </Button>
+
+            <Button Grid.Column="8"
+                    x:Name="RefreshButton"
                     VerticalAlignment="Center"
                     ToolTipService.ToolTip="{x:Bind svc:Strings.HeadRefreshTooltip}"
                     Click="RefreshButton_Click">
@@ -200,6 +283,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition x:Name="CollectionsRow" Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -210,16 +294,39 @@
                            Opacity="0.6"
                            FontSize="12" />
 
-                <ListView Grid.Row="1"
+                <ListView x:Name="FiltersList"
+                          Grid.Row="1"
                           ItemsSource="{x:Bind ViewModel.Filters}"
                           SelectedItem="{x:Bind ViewModel.SelectedFilterItem, Mode=TwoWay}"
                           ItemTemplate="{StaticResource FilterTemplate}"
                           SelectionMode="Single" />
 
-                <Grid Grid.Row="2" Margin="16,12,16,4" ColumnSpacing="2">
+                <Grid x:Name="RecentSection"
+                      Grid.Row="2"
+                      Visibility="Collapsed">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="{x:Bind svc:Strings.SideRecent}"
+                               Margin="16,12,16,4"
+                               Opacity="0.6"
+                               FontSize="12" />
+                    <ListView x:Name="RecentPinsList"
+                              Grid.Row="1"
+                              ItemsSource="{x:Bind ViewModel.RecentPins}"
+                              SelectionMode="Single"
+                              SelectedItem="{x:Bind ViewModel.SelectedRecentPin, Mode=TwoWay}"
+                              ItemTemplate="{StaticResource RecentPinTemplate}"
+                              MaxHeight="168"
+                              Margin="8,0,0,0" />
+                </Grid>
+
+                <Grid Grid.Row="3" Margin="16,12,16,4" ColumnSpacing="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
@@ -237,11 +344,17 @@
                                VerticalAlignment="Center" />
                     <Button Grid.Column="2"
                             Padding="6"
+                            ToolTipService.ToolTip="{x:Bind svc:Strings.SideEditCollectionTooltip}"
+                            Click="EditCollectionButton_Click">
+                        <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                    </Button>
+                    <Button Grid.Column="3"
+                            Padding="6"
                             ToolTipService.ToolTip="{x:Bind svc:Strings.SideNewCollectionTooltip}"
                             Click="NewCollectionButton_Click">
                         <FontIcon Glyph="&#xE710;" FontSize="12" />
                     </Button>
-                    <Button Grid.Column="3"
+                    <Button Grid.Column="4"
                             Padding="6"
                             ToolTipService.ToolTip="{x:Bind svc:Strings.SideDeleteCollectionTooltip}"
                             Click="DeleteCollectionButton_Click">
@@ -250,14 +363,14 @@
                 </Grid>
 
                 <ListView x:Name="CollectionsList"
-                          Grid.Row="3"
+                          Grid.Row="4"
                           ItemsSource="{x:Bind ViewModel.Collections}"
                           SelectedItem="{x:Bind ViewModel.SelectedCollection, Mode=TwoWay}"
                           ItemTemplate="{StaticResource CollectionTemplate}"
                           SelectionMode="Single"
                           Margin="0,0,0,8" />
 
-                <Button Grid.Row="4"
+                <Button Grid.Row="5"
                         Margin="16,12,16,12"
                         HorizontalAlignment="Stretch"
                         Click="AboutMenuItem_Click"
@@ -288,7 +401,7 @@
                           ItemsSource="{x:Bind ViewModel.Pins}"
                           SelectedItem="{x:Bind ViewModel.SelectedPin, Mode=TwoWay}"
                           ItemTemplate="{StaticResource PinCardTemplate}"
-                          SelectionMode="Single"
+                          SelectionMode="Extended"
                           IsItemClickEnabled="True"
                           CanDragItems="{x:Bind ViewModel.CanReorder, Mode=OneWay}"
                           CanReorderItems="{x:Bind ViewModel.CanReorder, Mode=OneWay}"
@@ -359,6 +472,11 @@ DoubleTapped="PinGrid_DoubleTapped"
                                    Visibility="Collapsed" />
 
                         <TextBlock x:Name="DetailTags"
+                   FontSize="12"
+                   Opacity="0.7"
+                   Visibility="Collapsed" />
+
+                        <TextBlock x:Name="DetailLastUsed"
                                    FontSize="12"
                                    Opacity="0.7"
                                    Visibility="Collapsed" />
@@ -368,17 +486,25 @@ DoubleTapped="PinGrid_DoubleTapped"
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Content="{x:Bind svc:Strings.DetailOpen}" Click="LaunchButton_Click" Style="{StaticResource AccentButtonStyle}" />
-                            <Button Grid.Column="1" Content="{x:Bind svc:Strings.DetailFavorite}" Click="FavoriteButton_Click" />
+                            <Button x:Name="DetailOpenButton" Grid.Column="0" Content="{x:Bind svc:Strings.DetailOpen}" Click="LaunchButton_Click" Style="{StaticResource AccentButtonStyle}" />
+                            <Button x:Name="DetailFavoriteButton" Grid.Column="1" Content="{x:Bind svc:Strings.DetailFavorite}" Click="FavoriteButton_Click" />
                         </Grid>
 
-                        <Button Content="{x:Bind svc:Strings.DetailRunAsAdmin}" Click="LaunchAdminButton_Click" />
-                        <Button Content="{x:Bind svc:Strings.DetailOpenLocation}" Click="OpenLocationButton_Click" />
-                        <Button Content="{x:Bind svc:Strings.DetailEdit}" Click="EditButton_Click" />
-                        <Button Content="{x:Bind svc:Strings.DetailDelete}" Click="DeleteButton_Click" />
+                        <Button x:Name="DetailRunAsAdminButton" Content="{x:Bind svc:Strings.DetailRunAsAdmin}" Click="LaunchAdminButton_Click" />
+                        <Button x:Name="DetailOpenLocationButton" Content="{x:Bind svc:Strings.DetailOpenLocation}" Click="OpenLocationButton_Click" />
+                        <Button x:Name="DetailEditButton" Content="{x:Bind svc:Strings.DetailEdit}" Click="EditButton_Click" />
+                        <Button x:Name="DetailDeleteButton" Content="{x:Bind svc:Strings.DetailDelete}" Click="DeleteButton_Click" />
                     </StackPanel>
                 </ScrollViewer>
             </Grid>
         </Grid>
+
+        <TeachingTip x:Name="TourTip"
+                     Grid.Row="1"
+                     PreferredPlacement="Bottom"
+                     PlacementMargin="16"
+                     IsOpen="False"
+                     ActionButtonClick="TourTip_ActionButtonClick"
+                     Closed="TourTip_Closed" />
     </Grid>
 </Page>

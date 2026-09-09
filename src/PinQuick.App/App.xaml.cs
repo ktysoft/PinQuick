@@ -64,6 +64,11 @@ public partial class App : Application
         Window = new MainWindow();
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
         Window.Activate();
+
+        if (Window is MainWindow mainWindow)
+        {
+            mainWindow.InitializeNativeBridge();
+        }
     }
 
     public static void Restart()
