@@ -3,6 +3,23 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [0.6.0] - 2026-09-10
+
+### Eklendi
+
+- Koleksiyonlara renk seçimi: koleksiyon iletişim kutusunda hazır renk kutusu
+  ve renk seçici bulunur; seçilen renk koleksiyon listesinde nokta olarak gösterilir.
+
+### Düzeltildi
+
+- Bir koleksiyon seçiliyken "Tüm pinler" filtresine tıklanınca liste koleksiyonda
+  takılı kalıyordu; artık herhangi bir filtre seçiminde (filtre zaten seçili olsa bile)
+  koleksiyon filtresi temizleniyor.
+- Ctrl+Click ile çoklu pin seçimi, kart tıklamaları sırasında tek seçime daralıyordu;
+  toplu "koleksiyona ekle" ve toplu "sil" işlemleri artık güvenilir şekilde çalışıyor.
+- Uygulama zaten açıkken yeniden başlatıldığında artık "zaten açık" uyarısı gösteriliyor,
+  açık pencere öne getiriliyor ve ikinci örnek kapanıyor.
+
 ## [0.5.0] - 2026-09-10
 
 ### Eklendi

@@ -168,6 +168,12 @@ public static class Loc
         ["FieldCollectionName"] = "Koleksiyon adı",
         ["CollectionNamePlaceholder"] = "Geliştirme, Sistem, Kişisel...",
         ["SideEditCollectionTooltip"] = "Seçili koleksiyonu yeniden adlandır",
+        ["FieldCollectionColor"] = "Renk",
+        ["NoColorButton"] = "Renksiz",
+
+        // Single instance
+        ["AlreadyRunningTitle"] = "PinQuick zaten açık",
+        ["AlreadyRunningMessage"] = "Uygulama zaten çalışıyor. Açık pencere öne getirildi.",
 
         // Settings dialog
         ["SettingsDialogTitle"] = "Ayarlar",
@@ -380,6 +386,11 @@ public static class Loc
         ["FieldCollectionName"] = "Collection name",
         ["CollectionNamePlaceholder"] = "Development, System, Personal...",
         ["SideEditCollectionTooltip"] = "Rename selected collection",
+        ["FieldCollectionColor"] = "Color",
+        ["NoColorButton"] = "No color",
+
+        ["AlreadyRunningTitle"] = "PinQuick is already running",
+        ["AlreadyRunningMessage"] = "The application is already running. The open window was brought to the front.",
 
         ["SettingsDialogTitle"] = "Settings",
         ["ThemeLabel"] = "Theme",
@@ -523,6 +534,10 @@ public static class Strings
     public static string CreateButton => Loc.T("CreateButton");
     public static string FieldCollectionName => Loc.T("FieldCollectionName");
     public static string CollectionNamePlaceholder => Loc.T("CollectionNamePlaceholder");
+    public static string FieldCollectionColor => Loc.T("FieldCollectionColor");
+    public static string NoColorButton => Loc.T("NoColorButton");
+    public static string AlreadyRunningTitle => Loc.T("AlreadyRunningTitle");
+    public static string AlreadyRunningMessage => Loc.T("AlreadyRunningMessage");
 
     public static string SettingsDialogTitle => Loc.T("SettingsDialogTitle");
     public static string ThemeLabel => Loc.T("ThemeLabel");

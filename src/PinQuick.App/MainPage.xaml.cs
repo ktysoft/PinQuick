@@ -1,6 +1,9 @@
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Storage;
+using Windows.System;
+using Windows.UI.Core;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -354,7 +357,7 @@ public sealed partial class MainPage : Page
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary && dialog.ResultName is not null)
         {
-            await ViewModel.AddCollectionAsync(dialog.ResultName);
+            await ViewModel.AddCollectionAsync(dialog.ResultName, dialog.ResultColor);
         }
     }
 
@@ -388,7 +391,7 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        var dialog = new CollectionDialog(ViewModel.SelectedCollection.Name)
+        var dialog = new CollectionDialog(ViewModel.SelectedCollection.Name, ViewModel.SelectedCollection.Color)
         {
             XamlRoot = RootGrid.XamlRoot,
         };
@@ -396,7 +399,7 @@ public sealed partial class MainPage : Page
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary && dialog.ResultName is not null)
         {
-            await ViewModel.UpdateCollectionAsync(ViewModel.SelectedCollection, dialog.ResultName);
+            await ViewModel.UpdateCollectionAsync(ViewModel.SelectedCollection, dialog.ResultName, dialog.ResultColor);
         }
     }
 
@@ -414,6 +417,12 @@ public sealed partial class MainPage : Page
 
     private async void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
+        if (PinGrid.SelectedItems.Count > 1)
+        {
+            await DeleteSelectedPinsAsync();
+            return;
+        }
+
         if (ViewModel.SelectedPin is null)
         {
             return;
@@ -438,10 +447,34 @@ public sealed partial class MainPage : Page
 
     private void PinGrid_ItemClick(object sender, ItemClickEventArgs e)
     {
-        if (e.ClickedItem is PinItemViewModel item)
+        if (e.ClickedItem is not PinItemViewModel item)
+        {
+            return;
+        }
+
+        if (!IsMultiSelectModifierPressed())
         {
             ViewModel.SelectedPin = item;
         }
+    }
+
+    private static bool IsMultiSelectModifierPressed()
+    {
+        var ctrl = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control);
+        var shift = InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift);
+        return ctrl.HasFlag(CoreVirtualKeyStates.Down)
+            || shift.HasFlag(CoreVirtualKeyStates.Down);
+    }
+
+    private void FiltersList_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is not SidebarFilterItemViewModel item)
+        {
+            return;
+        }
+
+        ViewModel.SelectedCollection = null;
+        ViewModel.SelectedFilterItem = item;
     }
 
     private async void PinGrid_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
@@ -592,7 +625,10 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        ViewModel.SelectedPin = item;
+        if (PinGrid.SelectedItems.Count <= 1)
+        {
+            ViewModel.SelectedPin = item;
+        }
 
         var menu = new MenuFlyout();
 

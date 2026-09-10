@@ -21,5 +21,25 @@
         <TextBox x:Name="NameBox"
                  Header="{x:Bind svc:Strings.FieldCollectionName}"
                  PlaceholderText="{x:Bind svc:Strings.CollectionNamePlaceholder}" />
+        <TextBlock x:Name="ColorHeader"
+                   Text="{x:Bind svc:Strings.FieldCollectionColor}"
+                   FontWeight="SemiBold" />
+        <StackPanel x:Name="SwatchContainer" Orientation="Horizontal" Spacing="8" />
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <Border x:Name="ColorPreview"
+                    Width="32"
+                    Height="32"
+                    CornerRadius="6"
+                    BorderBrush="Gray"
+                    BorderThickness="1"
+                    HorizontalAlignment="Left" />
+            <ToggleButton x:Name="NoColorToggle"
+                          Content="{x:Bind svc:Strings.NoColorButton}"
+                          Click="NoColorToggle_Click" />
+        </StackPanel>
+        <ColorPicker x:Name="ColorPickerBox"
+                     ColorSpectrumShape="Ring"
+                     IsAlphaEnabled="False"
+                     ColorChanged="ColorPickerBox_ColorChanged" />
     </StackPanel>
 </ContentDialog>

@@ -102,6 +102,12 @@ public partial class App : Application
     {
         try
         {
+            MessageBoxW(
+                IntPtr.Zero,
+                Loc.T("AlreadyRunningMessage"),
+                Loc.T("AlreadyRunningTitle"),
+                0x40u | 0x0u); // MB_ICONINFORMATION | MB_OK
+
             var title = $"{AppInfo.Title} {AppInfo.Version}";
             var hwnd = FindWindowW(null, title);
             if (hwnd == IntPtr.Zero)
@@ -119,6 +125,9 @@ public partial class App : Application
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr FindWindowW(string? lpClassName, string? lpWindowName);
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int MessageBoxW(IntPtr hWnd, string lpText, string lpCaption, uint uType);
 
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);

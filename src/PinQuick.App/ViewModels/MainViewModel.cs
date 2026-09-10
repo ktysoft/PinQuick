@@ -130,7 +130,13 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnSelectedFilterItemChanged(SidebarFilterItemViewModel? value)
     {
-        if (value is not null && value.Filter != CurrentFilter)
+        if (value is null)
+        {
+            return;
+        }
+
+        SelectedCollection = null;
+        if (value.Filter != CurrentFilter)
         {
             CurrentFilter = value.Filter;
         }
@@ -544,7 +550,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    public async Task AddCollectionAsync(string name)
+    public async Task AddCollectionAsync(string name, string? color = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
@@ -559,11 +565,11 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        await _collectionManager.AddAsync(new Collection { Name = name.Trim() });
+        await _collectionManager.AddAsync(new Collection { Name = name.Trim(), Color = string.IsNullOrWhiteSpace(color) ? string.Empty : color.Trim() });
         await LoadCollectionsAsync();
     }
 
-    public async Task UpdateCollectionAsync(Collection collection, string newName)
+    public async Task UpdateCollectionAsync(Collection collection, string newName, string? color = null)
     {
         if (collection is null || string.IsNullOrWhiteSpace(newName))
         {
@@ -581,6 +587,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         var selectedId = SelectedCollection?.Id;
         collection.Name = newName.Trim();
+        collection.Color = string.IsNullOrWhiteSpace(color) ? string.Empty : color.Trim();
         await _collectionManager.UpdateAsync(collection);
         await LoadCollectionsAsync();
         SelectedCollection = selectedId is long id
