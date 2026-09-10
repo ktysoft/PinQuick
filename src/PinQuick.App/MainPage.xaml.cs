@@ -1,9 +1,11 @@
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Foundation;
 using Windows.Storage;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.Storage.Pickers;
 using PinQuick.App.Dialogs;
 using PinQuick.App.Services;
@@ -26,6 +28,7 @@ public sealed partial class MainPage : Page
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         ViewModel.Pins.CollectionChanged += (_, _) => UpdateEmptyState();
         ViewModel.RecentPins.CollectionChanged += (_, _) => UpdateRecentSectionVisibility();
+        ViewModel.Collections.CollectionChanged += (_, _) => UpdateSelectionBar();
         Loaded += OnLoaded;
     }
 
@@ -449,11 +452,77 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private void PinCard_DragStarting(UIElement sender, DragStartingEventArgs args)
+    private void PinGrid_DragItemsStarting(object sender, DragItemsStartingEventArgs args)
     {
-        if (sender is FrameworkElement element && element.DataContext is PinItemViewModel item)
+        var ids = args.Items
+            .OfType<PinItemViewModel>()
+            .Where(p => p.Id != 0)
+            .Select(p => p.Id.ToString())
+            .ToList();
+
+        if (ids.Count > 0)
         {
-            args.Data.SetText(item.Id.ToString());
+            args.Data.SetText(string.Join(",", ids));
+        }
+        else
+        {
+            args.Cancel = true;
+        }
+    }
+
+    private void PinGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        UpdateSelectionBar();
+    }
+
+    private void UpdateSelectionBar()
+    {
+        var count = PinGrid.SelectedItems.Count;
+        if (count > 1)
+        {
+            SelectionCountText.Text = string.Format(Loc.T("SelBarCount"), count);
+            SelectionAddButton.IsEnabled = ViewModel.Collections.Count > 0;
+            SelectionBar.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            SelectionBar.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void SelectionClearButton_Click(object sender, RoutedEventArgs e)
+    {
+        PinGrid.SelectedItem = null;
+    }
+
+    private async void SelectionDeleteButton_Click(object sender, RoutedEventArgs e)
+        => await DeleteSelectedPinsAsync();
+
+    private async void SelectionAddButton_Click(object sender, RoutedEventArgs e)
+    {
+        var ids = PinGrid.SelectedItems.OfType<PinItemViewModel>().Select(p => p.Id).ToList();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var flyout = new MenuFlyout();
+        foreach (var collection in ViewModel.Collections)
+        {
+            var item = new MenuFlyoutItem { Text = collection.Name };
+            var collectionId = collection.Id;
+            item.Click += async (_, _) => await ViewModel.AssignSelectedToCollectionAsync(ids, collectionId);
+            flyout.Items.Add(item);
+        }
+
+        if (flyout.Items.Count == 0)
+        {
+            return;
+        }
+
+        if (sender is FrameworkElement element)
+        {
+            flyout.ShowAt(element);
         }
     }
 
@@ -910,9 +979,9 @@ public sealed partial class MainPage : Page
 
     private void EscapeAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
-        if (TourTip.IsOpen)
+        if (TourOverlay.Visibility == Visibility.Visible)
         {
-            TourTip.IsOpen = false;
+            CloseTour();
             args.Handled = true;
         }
         else if (PinGrid.SelectedItems.Count > 1)
@@ -961,61 +1030,116 @@ public sealed partial class MainPage : Page
     }
 
     private int _tourIndex = -1;
+    private FrameworkElement? _tourTarget;
+    private (FrameworkElement Target, string TitleKey, string SubtitleKey)[] _tourSteps = null!;
 
-    private (FrameworkElement? Target, TeachingTipPlacementMode Placement)[] GetTourSteps() =>
-    [
-        (SearchBox, TeachingTipPlacementMode.Bottom),
-        (NewPinButton, TeachingTipPlacementMode.Bottom),
-        (FiltersList, TeachingTipPlacementMode.Right),
-        (CollectionsList, TeachingTipPlacementMode.Right),
-        (PinGrid, TeachingTipPlacementMode.Top),
-        (SettingsButton, TeachingTipPlacementMode.Bottom),
-        (MenuButton, TeachingTipPlacementMode.Bottom),
-    ];
+    private void EnsureTourSteps()
+    {
+        if (_tourSteps is not null)
+        {
+            return;
+        }
+
+        _tourSteps =
+        [
+            (SearchBox, "TourStep1Title", "TourStep1Subtitle"),
+            (NewPinButton, "TourStep2Title", "TourStep2Subtitle"),
+            (FiltersList, "TourStep3Title", "TourStep3Subtitle"),
+            (CollectionsList, "TourStep4Title", "TourStep4Subtitle"),
+            (PinGrid, "TourStep5Title", "TourStep5Subtitle"),
+            (SettingsButton, "TourStep6Title", "TourStep6Subtitle"),
+            (MenuButton, "TourStep7Title", "TourStep7Subtitle"),
+        ];
+    }
 
     private void ShowTour()
     {
-        if (_tourIndex >= 0)
+        EnsureTourSteps();
+
+        if (TourOverlay.Visibility == Visibility.Visible)
         {
             return;
         }
 
         _tourIndex = 0;
+        TourOverlay.Visibility = Visibility.Visible;
         ShowTourStep();
     }
 
     private void ShowTourStep()
     {
-        var (target, placement) = GetTourSteps()[_tourIndex];
-        var isLastStep = _tourIndex == GetTourSteps().Length - 1;
+        var (target, titleKey, subtitleKey) = _tourSteps[_tourIndex];
 
-        TourTip.Target = target;
-        TourTip.PreferredPlacement = placement;
-        TourTip.Title = Loc.T($"TourStep{_tourIndex + 1}Title");
-        TourTip.Subtitle = Loc.T($"TourStep{_tourIndex + 1}Subtitle");
-        TourTip.CloseButtonContent = Loc.T("TourClose");
-        TourTip.ActionButtonContent = isLastStep
+        if (ReferenceEquals(target, CollectionsList) && CollectionsList.Visibility != Visibility.Visible)
+        {
+            _isCollectionsExpanded = true;
+            CollectionsList.Visibility = Visibility.Visible;
+            CollectionsRow.Height = new GridLength(1, GridUnitType.Star);
+            CollectionsChevron.Glyph = "\uE70D";
+        }
+
+        TourStepTitle.Text = Loc.T(titleKey);
+        TourStepSubtitle.Text = Loc.T(subtitleKey);
+        TourStepNumber.Text = string.Format(Loc.T("TourProgress"), _tourIndex + 1, _tourSteps.Length);
+        TourNextButton.Content = _tourIndex == _tourSteps.Length - 1
             ? Loc.T("TourFinish")
             : Loc.T("TourNext");
-        TourTip.IsOpen = true;
+
+        _tourTarget = target;
+        PositionTourHighlight();
     }
 
-    private void TourTip_ActionButtonClick(TeachingTip sender, object args)
+    private void PositionTourHighlight()
     {
-        if (_tourIndex < GetTourSteps().Length - 1)
+        if (_tourTarget is null || TourOverlay.Visibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        const double padding = 8;
+
+        _tourTarget.UpdateLayout();
+        TourOverlay.UpdateLayout();
+
+        var topLeft = _tourTarget.TransformToVisual(TourOverlay).TransformPoint(new Point(0, 0));
+        TourHighlight.Width = Math.Max(_tourTarget.ActualWidth, 1) + padding * 2;
+        TourHighlight.Height = Math.Max(_tourTarget.ActualHeight, 1) + padding * 2;
+        TourHighlight.RenderTransform = new TranslateTransform
+        {
+            X = topLeft.X - padding,
+            Y = topLeft.Y - padding,
+        };
+    }
+
+    private void TourOverlay_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (TourOverlay.Visibility == Visibility.Visible)
+        {
+            PositionTourHighlight();
+        }
+    }
+
+    private void TourNextButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_tourIndex + 1 < _tourSteps.Length)
         {
             _tourIndex++;
             ShowTourStep();
         }
         else
         {
-            TourTip.IsOpen = false;
+            CloseTour();
         }
     }
 
-    private void TourTip_Closed(TeachingTip sender, TeachingTipClosedEventArgs args)
+    private void TourSkipButton_Click(object sender, RoutedEventArgs e)
+        => CloseTour();
+
+    private void CloseTour()
     {
         _tourIndex = -1;
+        _tourTarget = null;
+        TourOverlay.Visibility = Visibility.Collapsed;
     }
 
     private void UpdateThemeToggleGlyph()
@@ -1068,15 +1192,18 @@ public sealed partial class MainPage : Page
         }
 
         var pinIdText = await e.DataView.GetTextAsync();
-        if (!long.TryParse(pinIdText, out var pinId))
+        var pinIds = new List<long>();
+        foreach (var part in pinIdText.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            return;
+            if (long.TryParse(part, out var id))
+            {
+                pinIds.Add(id);
+            }
         }
 
-        var pin = ViewModel.Pins.FirstOrDefault(p => p.Id == pinId)?.Pin;
-        if (pin is not null)
+        if (pinIds.Count > 0)
         {
-            await ViewModel.AssignPinToCollectionAsync(pin, collectionId);
+            await ViewModel.AssignSelectedToCollectionAsync(pinIds.Distinct().ToList(), collectionId);
         }
     }
 }

@@ -3,7 +3,7 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
-## [Unreleased]
+## [0.5.0] - 2026-09-10
 
 ### Eklendi
 
@@ -34,6 +34,8 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 - Eğitim turunda ve metin kutusunda Escape ile kapatma
 - "Hakkında" iletişim kutusunda web sitesi ve e-posta adresleri tıklanabilir
   bağlantı olarak açılır
+- Çoklu pin seçiminde gridin üstünde beliren işlem çubuğu: seçilen pin sayısı,
+  toplu "Koleksiyona ekle", toplu "Sil" ve "Seçimi temizle" butonları
 
 ### Değişti
 
@@ -57,6 +59,14 @@ Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
   tırnak kullanımı giderildi).
 - Pencere boyutu ve büyütülmüş (maximize) durumu artık hatırlanıyor;
   uygulama açıldığında son ayar geri yükleniyor.
+- Uygulama artık tek örnek (tek instance) olarak çalışıyor: zaten açıkken
+  tekrar başlatılırsa mevcut pencere öne getirilir ve ikinci örnek kapanır.
+- Pin kartlarının sürükle-bırak ile yeniden sıralanması geri kazandırıldı;
+  kartlar koleksiyonlara da sürüklenebiliyor.
+- Arayüz eğitimi sıfırdan yeniden tasarlandı: karartılmış arka plan, hedefi
+  vurgulayan çerçeve ve alt bilgi kartı (adım sayacı, Sonraki/Atla) ile çalışır.
+- Sistem tepsisi ikonu artık her zaman görünür; kurulum sürümünde uygulama
+  ikonunun publish çıktısına kopyalanmaması sorunu giderildi.
 
 ## [0.4.0] - 2026-09-08
 

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
@@ -41,6 +42,10 @@ public partial class App : Application
 
     public static AppServices Services { get; } = new();
 
+    private const string SingleInstanceMutexName = @"Local\PinQuick.SingleInstance";
+
+    private static Mutex? _singleInstanceMutex;
+
     public App()
     {
         InitializeComponent();
@@ -61,6 +66,11 @@ public partial class App : Application
 
     protected override void OnLaunched(Microsoft.UI.Xaml.LaunchActivatedEventArgs args)
     {
+        if (!TryAcquireSingleInstance())
+        {
+            return;
+        }
+
         Window = new MainWindow();
         DispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
         Window.Activate();
@@ -70,6 +80,51 @@ public partial class App : Application
             mainWindow.InitializeNativeBridge();
         }
     }
+
+    private static bool TryAcquireSingleInstance()
+    {
+        _singleInstanceMutex = new Mutex(
+            initiallyOwned: true,
+            name: SingleInstanceMutexName,
+            createdNew: out var isFirstInstance);
+
+        if (isFirstInstance)
+        {
+            return true;
+        }
+
+        ActivateExistingInstance();
+        Environment.Exit(0);
+        return false;
+    }
+
+    private static void ActivateExistingInstance()
+    {
+        try
+        {
+            var title = $"{AppInfo.Title} {AppInfo.Version}";
+            var hwnd = FindWindowW(null, title);
+            if (hwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            ShowWindow(hwnd, 9); // SW_RESTORE
+            SetForegroundWindow(hwnd);
+        }
+        catch
+        {
+        }
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern IntPtr FindWindowW(string? lpClassName, string? lpWindowName);
+
+    [DllImport("user32.dll")]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
 
     public static void Restart()
     {

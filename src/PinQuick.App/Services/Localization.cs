@@ -114,6 +114,9 @@ public static class Loc
         ["DeletePinTitle"] = "Pini sil",
         ["DeletePinPrompt"] = "'{0}' silinsin mi?",
         ["DeleteSelectedPrompt"] = "Seçili {0} pin silinsin mi?",
+        ["SelBarCount"] = "{0} pin seçildi",
+        ["SelBarAddToCollection"] = "Koleksiyona ekle",
+        ["SelBarClear"] = "Seçimi temizle",
         ["DeleteCollectionTitle"] = "Koleksiyonu sil",
         ["DeleteCollectionPrompt"] = "'{0}' koleksiyonu silinsin mi?",
         ["SilButton"] = "Sil",
@@ -207,6 +210,7 @@ public static class Loc
         ["TourFinish"] = "Tamamla",
         ["TourClose"] = "Kapat",
         ["TourSkip"] = "Atla",
+        ["TourProgress"] = "Adım {0}/{1}",
 
         // About
         ["AboutTitle"] = "{0} hakkında",
@@ -324,6 +328,9 @@ public static class Loc
         ["DeletePinTitle"] = "Delete pin",
         ["DeletePinPrompt"] = "Delete '{0}'?",
         ["DeleteSelectedPrompt"] = "Delete {0} selected pins?",
+        ["SelBarCount"] = "{0} pins selected",
+        ["SelBarAddToCollection"] = "Add to collection",
+        ["SelBarClear"] = "Clear selection",
         ["DeleteCollectionTitle"] = "Delete collection",
         ["DeleteCollectionPrompt"] = "Delete collection '{0}'?",
         ["SilButton"] = "Delete",
@@ -436,6 +443,7 @@ public static class Loc
         ["TourFinish"] = "Finish",
         ["TourClose"] = "Close",
         ["TourSkip"] = "Skip",
+        ["TourProgress"] = "Step {0}/{1}",
     };
 }
 
@@ -452,6 +460,9 @@ public static class Strings
     public static string MenuBackup => Loc.T("MenuBackup");
     public static string MenuRestore => Loc.T("MenuRestore");
     public static string MenuShowTour => Loc.T("MenuShowTour");
+    public static string TourProgress => Loc.T("TourProgress");
+    public static string TourNext => Loc.T("TourNext");
+    public static string TourSkip => Loc.T("TourSkip");
     public static string HeadSettingsTooltip => Loc.T("HeadSettingsTooltip");
     public static string HeadRefreshTooltip => Loc.T("HeadRefreshTooltip");
     public static string SearchPlaceholder => Loc.T("SearchPlaceholder");
@@ -468,6 +479,8 @@ public static class Strings
     public static string SideAbout => Loc.T("SideAbout");
     public static string SideAboutTooltip => Loc.T("SideAboutTooltip");
     public static string GridReorderTooltip => Loc.T("GridReorderTooltip");
+    public static string SelBarAddToCollection => Loc.T("SelBarAddToCollection");
+    public static string SelBarClear => Loc.T("SelBarClear");
 
     public static string EmptyNoPins => Loc.T("EmptyNoPins");
     public static string EmptyDescription => Loc.T("EmptyDescription");

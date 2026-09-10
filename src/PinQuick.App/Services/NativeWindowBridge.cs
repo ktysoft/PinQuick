@@ -54,7 +54,9 @@ internal sealed class NativeWindowBridge : IDisposable
     }
 
     /// <summary>
-    /// Tepsi ikonu ve global kısayolu kullanıcı ayarlarına göre açıp kapatır.
+    /// Sistem tepsisi ikonunu (her zaman görünür) ve global kısayolu kullanıcı
+    /// ayarlarına göre açıp kapatır. Tepsi ikonu uygulama çalıştığı sürece görünür;
+    /// minimizeToTray yalnızca pencere kapandığında kalıcılığı yönetir.
     /// </summary>
     public void ApplySettings(bool minimizeToTray, bool hotkeyEnabled)
     {
@@ -63,15 +65,10 @@ internal sealed class NativeWindowBridge : IDisposable
             return;
         }
 
-        if (minimizeToTray && !_trayShown)
+        if (!_trayShown)
         {
             AddTrayIcon();
             _trayShown = true;
-        }
-        else if (!minimizeToTray && _trayShown)
-        {
-            RemoveTrayIcon();
-            _trayShown = false;
         }
 
         if (hotkeyEnabled && !_hotkeyRegistered)

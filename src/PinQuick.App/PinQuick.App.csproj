@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <RootNamespace>PinQuick.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;ARM64</Platforms>
@@ -77,6 +77,20 @@
     <PublishTrimmed>False</PublishTrimmed>
     <SelfContained>true</SelfContained>
   </PropertyGroup>
+
+  <!--
+    Publish sirasinda <Content> ogeleri (Assets) ciktiya kopyalanmiyor;
+    bu target, Assets klasorunu publish dizinine ekler. Ayrica tepsi ikonu ve
+    pencere ikonu Assets\AppIcon.ico dosyasindan yuklendigi icin gerekli.
+  -->
+  <Target Name="CopyAssetsToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <_AssetsForPublish Include="$(MSBuildProjectDirectory)\Assets\*.ico" />
+    </ItemGroup>
+    <Copy Condition="'@(_AssetsForPublish)' != ''"
+          SourceFiles="@(_AssetsForPublish)"
+          DestinationFolder="$(PublishDir)Assets" />
+  </Target>
 
   <!--
     WindowsAppSDK 2.4 self-contained publish ile uygulamanin kendi

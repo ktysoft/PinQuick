@@ -6,7 +6,7 @@ RequestExecutionLevel admin
 SetCompressor /SOLID lzma
 
 !define APP_NAME "PinQuick"
-!define APP_VERSION "0.4.0"
+!define APP_VERSION "0.5.0"
 !define PUBLISHER "KTYSoft"
 !define APP_EXE "PinQuick.App.exe"
 
