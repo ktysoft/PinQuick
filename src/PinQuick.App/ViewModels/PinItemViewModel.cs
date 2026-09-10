@@ -68,6 +68,40 @@ public sealed partial class PinItemViewModel : ObservableObject
     public bool IsBroken => PinHealth.IsBroken(Pin);
 
     /// <summary>
+    /// Pinin dahil olduğu koleksiyonun adı (koleksiyon yoksa boş).
+    /// </summary>
+    public string CollectionName { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Pinin dahil olduğu koleksiyonun rengi ("#RRGGBB" veya boş).
+    /// </summary>
+    public string CollectionColor { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Pin bir koleksiyona dahil ise <c>true</c>.
+    /// </summary>
+    public bool HasCollection => !string.IsNullOrEmpty(CollectionName);
+
+    /// <summary>
+    /// Pinin koleksiyon bilgisini günceller ve görünümü yeniler.
+    /// </summary>
+    public void SetCollection(Collection? collection)
+    {
+        var name = collection?.Name ?? string.Empty;
+        var color = collection?.Color ?? string.Empty;
+        if (CollectionName == name && CollectionColor == color)
+        {
+            return;
+        }
+
+        CollectionName = name;
+        CollectionColor = color;
+        OnPropertyChanged(nameof(CollectionName));
+        OnPropertyChanged(nameof(CollectionColor));
+        OnPropertyChanged(nameof(HasCollection));
+    }
+
+    /// <summary>
     /// Uygulama ayarına göre kart genişliği. Ayar değişince liste yeniden oluşturulur.
     /// </summary>
     public double CardWidth => AppSettings.Current.CardSize switch

@@ -173,7 +173,7 @@ public static class Loc
 
         // Single instance
         ["AlreadyRunningTitle"] = "PinQuick zaten açık",
-        ["AlreadyRunningMessage"] = "Uygulama zaten çalışıyor. Açık pencere öne getirildi.",
+        ["AlreadyRunningMessage"] = "Uygulama zaten çalışıyor.",
 
         // Settings dialog
         ["SettingsDialogTitle"] = "Ayarlar",
@@ -390,7 +390,7 @@ public static class Loc
         ["NoColorButton"] = "No color",
 
         ["AlreadyRunningTitle"] = "PinQuick is already running",
-        ["AlreadyRunningMessage"] = "The application is already running. The open window was brought to the front.",
+        ["AlreadyRunningMessage"] = "The application is already running.",
 
         ["SettingsDialogTitle"] = "Settings",
         ["ThemeLabel"] = "Theme",

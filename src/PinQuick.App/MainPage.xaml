@@ -86,6 +86,19 @@
                     <TextBlock Text="{x:Bind TypeDisplay}"
                                Opacity="0.7"
                                FontSize="12" />
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="5"
+                                Visibility="{x:Bind HasCollection, Converter={StaticResource BoolToVisibility}}">
+                        <Ellipse Width="8"
+                                 Height="8"
+                                 Margin="0,0,0,0"
+                                 VerticalAlignment="Center"
+                                 Fill="{x:Bind CollectionColor, Converter={StaticResource HexToBrush}}" />
+                        <TextBlock Text="{x:Bind CollectionName}"
+                                   Opacity="0.8"
+                                   FontSize="11"
+                                   TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </DataTemplate>

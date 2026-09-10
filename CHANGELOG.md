@@ -3,6 +3,23 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [0.7.0] - 2026-09-10
+
+### Eklendi
+
+- Koleksiyona ait pinlerin kartlarında koleksiyon adı ve rengi gösterilir:
+  kartın altında renkli nokta + koleksiyon adı (koleksiyonu olmayan pinlerde gizli).
+
+### Değişti
+
+- İkinci örnek çalıştırma uyarısındaki "Açık pencere öne getirildi." ifadesi
+  kaldırıldı; artık yalnızca "Uygulama zaten çalışıyor." gösteriliyor.
+
+### Düzeltildi
+
+- Sürükle-bırak ile pin ekleme geri kazanıldı ve daha güvenilir hale getirildi:
+  bırakma işleminde async veri okuma tamamlanana kadar işlem erteleniyor.
+
 ## [0.6.0] - 2026-09-10
 
 ### Eklendi

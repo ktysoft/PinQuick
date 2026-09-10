@@ -224,10 +224,16 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         Pins.Clear();
+        var collectionMap = Collections.ToDictionary(c => c.Id);
         foreach (var pin in sorted)
         {
             var item = new PinItemViewModel(pin);
             item.ToggleFavoriteRequested = OnToggleFavoriteRequested;
+            if (pin.CollectionId is long collectionId && collectionMap.TryGetValue(collectionId, out var collection))
+            {
+                item.SetCollection(collection);
+            }
+
             Pins.Add(item);
         }
 

@@ -225,14 +225,9 @@ public sealed partial class MainPage : Page
 
     private void RootGrid_DragOver(object sender, DragEventArgs e)
     {
-        if (e.DataView.Contains(StandardDataFormats.StorageItems))
-        {
-            e.AcceptedOperation = DataPackageOperation.Copy;
-        }
-        else
-        {
-            e.AcceptedOperation = DataPackageOperation.None;
-        }
+        e.AcceptedOperation = e.DataView.Contains(StandardDataFormats.StorageItems)
+            ? DataPackageOperation.Copy
+            : DataPackageOperation.None;
     }
 
     private async void RootGrid_Drop(object sender, DragEventArgs e)
@@ -242,49 +237,57 @@ public sealed partial class MainPage : Page
             return;
         }
 
-        var items = await e.DataView.GetStorageItemsAsync();
-        if (items is null || items.Count == 0)
+        var deferral = e.GetDeferral();
+        try
         {
-            return;
-        }
-
-        var pins = new List<Pin>();
-        foreach (var item in items)
-        {
-            switch (item)
+            var items = await e.DataView.GetStorageItemsAsync();
+            if (items is null || items.Count == 0)
             {
-                case IStorageFile file:
+                return;
+            }
+
+            var pins = new List<Pin>();
+            foreach (var item in items)
+            {
+                switch (item)
                 {
-                    var extension = Path.GetExtension(file.Path).ToLowerInvariant();
-                    var type = extension switch
+                    case IStorageFile file:
                     {
-                        ".exe" or ".lnk" => PinType.Application,
-                        ".bat" or ".cmd" => PinType.Batch,
-                        ".ps1" => PinType.PowerShell,
-                        _ => PinType.File,
-                    };
-                    pins.Add(new Pin
-                    {
-                        Title = Path.GetFileNameWithoutExtension(file.Path),
-                        Type = type,
-                        Target = file.Path,
-                    });
-                    break;
+                        var extension = Path.GetExtension(file.Path).ToLowerInvariant();
+                        var type = extension switch
+                        {
+                            ".exe" or ".lnk" => PinType.Application,
+                            ".bat" or ".cmd" => PinType.Batch,
+                            ".ps1" => PinType.PowerShell,
+                            _ => PinType.File,
+                        };
+                        pins.Add(new Pin
+                        {
+                            Title = Path.GetFileNameWithoutExtension(file.Path),
+                            Type = type,
+                            Target = file.Path,
+                        });
+                        break;
+                    }
+                    case IStorageFolder folder:
+                        pins.Add(new Pin
+                        {
+                            Title = folder.Name,
+                            Type = PinType.Folder,
+                            Target = folder.Path,
+                        });
+                        break;
                 }
-                case IStorageFolder folder:
-                    pins.Add(new Pin
-                    {
-                        Title = folder.Name,
-                        Type = PinType.Folder,
-                        Target = folder.Path,
-                    });
-                    break;
+            }
+
+            if (pins.Count > 0)
+            {
+                await ViewModel.AddDroppedPinsAsync(pins);
             }
         }
-
-        if (pins.Count > 0)
+        finally
         {
-            await ViewModel.AddDroppedPinsAsync(pins);
+            deferral.Complete();
         }
     }
 
