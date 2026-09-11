@@ -6,7 +6,7 @@ RequestExecutionLevel admin
 SetCompressor /SOLID lzma
 
 !define APP_NAME "PinQuick"
-!define APP_VERSION "0.8.0"
+!define APP_VERSION "0.8.1"
 !define PUBLISHER "KTYSoft"
 !define APP_EXE "PinQuick.App.exe"
 
@@ -36,7 +36,7 @@ Icon "..\src\PinQuick.App\Assets\AppIcon.ico"
 UninstallIcon "..\src\PinQuick.App\Assets\AppIcon.ico"
 
 ; Kurulumcu meta bilgisi (Dosya > Özellikler)
-VIProductVersion "0.8.0.0"
+VIProductVersion "0.8.1.0"
 VIAddVersionKey "ProductName" "${APP_NAME}"
 VIAddVersionKey "ProductVersion" "${APP_VERSION}"
 VIAddVersionKey "FileDescription" "${APP_NAME} ${APP_VERSION} Kurulumu"

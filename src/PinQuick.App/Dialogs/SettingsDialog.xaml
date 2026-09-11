@@ -10,10 +10,14 @@
     PrimaryButtonText="{x:Bind svc:Strings.SaveButton}"
     SecondaryButtonText="{x:Bind svc:Strings.CancelButton}"
     DefaultButton="Primary"
-    MinWidth="380"
+    MinWidth="480"
     mc:Ignorable="d">
 
-    <StackPanel Spacing="16" Margin="8">
+    <ScrollViewer MaxHeight="520"
+                  VerticalScrollBarVisibility="Auto"
+                  VerticalScrollMode="Auto"
+                  ZoomMode="Disabled">
+        <StackPanel Spacing="16" Margin="8">
         <TextBlock Text="{x:Bind svc:Strings.ThemeLabel}" FontWeight="SemiBold" />
         <ComboBox x:Name="ThemeCombo"
                   HorizontalAlignment="Stretch">
@@ -69,5 +73,6 @@
         <Button Content="{x:Bind svc:Strings.MenuShowTour}"
                 HorizontalAlignment="Left"
                 Click="ShowTourButton_Click" />
-    </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

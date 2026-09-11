@@ -3,6 +3,14 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [0.8.1] - 2026-09-11
+
+### Değişti
+
+- Ayarlar iletişim kutusu genişletildi ve içeriği kaydırılabilir yapıldı:
+  düşük çözünürlüklerde veya dar pencerelerde menü artık ekrana sığıyor
+  (içerik gerekirse kaydırılıyor).
+
 ## [0.8.0] - 2026-09-11
 
 ### Eklendi
