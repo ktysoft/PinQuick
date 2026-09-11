@@ -41,6 +41,23 @@
                       Header="{x:Bind svc:Strings.GlobalHotkeyLabel}"
                       HorizontalAlignment="Left" />
 
+        <TextBlock Text="{x:Bind svc:Strings.HotkeyCaptureLabel}" FontWeight="SemiBold" />
+        <TextBox x:Name="HotkeyBox"
+                 IsReadOnly="True"
+                 KeyDown="HotkeyBox_KeyDown"
+                 HorizontalAlignment="Stretch" />
+        <TextBlock x:Name="HotkeyHint"
+                   Text="{x:Bind svc:Strings.HotkeyCaptureHint}"
+                   FontSize="12"
+                   Opacity="0.6"
+                   TextWrapping="Wrap" />
+        <TextBlock x:Name="HotkeyWarning"
+                   Text="{x:Bind svc:Strings.HotkeyNeedModifier}"
+                   Foreground="#C42B1C"
+                   FontSize="12"
+                   Visibility="Collapsed"
+                   TextWrapping="Wrap" />
+
         <TextBlock Text="{x:Bind svc:Strings.AutoBackupLabel}" FontWeight="SemiBold" />
         <ComboBox x:Name="AutoBackupCombo"
                   HorizontalAlignment="Stretch">

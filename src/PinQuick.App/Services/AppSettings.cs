@@ -25,6 +25,8 @@ public sealed class AppSettings
 
     public bool GlobalHotkeyEnabled { get; set; }
 
+    public string GlobalHotkey { get; set; } = "Ctrl+Space";
+
     public bool IsOnboardingCompleted { get; set; }
 
     public int? WindowWidth { get; set; }

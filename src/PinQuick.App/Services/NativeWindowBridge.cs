@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using System.Text;
+using Windows.System;
 
 namespace PinQuick.App.Services;
 
@@ -37,6 +39,8 @@ internal sealed class NativeWindowBridge : IDisposable
     private nint _menu;
     private bool _trayShown;
     private bool _hotkeyRegistered;
+    private uint _hotkeyModifiers;
+    private uint _hotkeyVirtualKey;
     private bool _disposed;
 
     private static SubclassProcDelegate? _subclassProc;
@@ -57,12 +61,16 @@ internal sealed class NativeWindowBridge : IDisposable
     /// Sistem tepsisi ikonunu (her zaman görünür) ve global kısayolu kullanıcı
     /// ayarlarına göre açıp kapatır. Tepsi ikonu uygulama çalıştığı sürece görünür;
     /// minimizeToTray yalnızca pencere kapandığında kalıcılığı yönetir.
+    /// Kısayol kullanıcı tarafından seçilen kombinasyonla kaydedilir; kombinasyon
+    /// değiştiğinde eski kayıt kaldırılıp yenisi alınır.
+    /// Başarı geri döndürülür: false dönerse istenen kısayol kaydedilemedi
+    /// (ör. kombinasyon başka bir uygulama tarafından kullanılıyor).
     /// </summary>
-    public void ApplySettings(bool minimizeToTray, bool hotkeyEnabled)
+    public bool ApplySettings(bool minimizeToTray, bool hotkeyEnabled, string hotkey)
     {
         if (_disposed)
         {
-            return;
+            return true;
         }
 
         if (!_trayShown)
@@ -71,16 +79,40 @@ internal sealed class NativeWindowBridge : IDisposable
             _trayShown = true;
         }
 
-        if (hotkeyEnabled && !_hotkeyRegistered)
+        var (modifiers, virtualKey) = ParseHotkeyOrDefault(hotkey);
+        var success = true;
+
+        if (hotkeyEnabled)
         {
-            RegisterHotKey(_hwnd, IdHotkey, ModControl | ModNoRepeat, VkSpace);
-            _hotkeyRegistered = true;
+            var changed = _hotkeyRegistered
+                && (modifiers != _hotkeyModifiers || virtualKey != _hotkeyVirtualKey);
+
+            if (changed)
+            {
+                if (UnregisterHotKey(_hwnd, IdHotkey))
+                {
+                    _hotkeyRegistered = false;
+                }
+            }
+
+            if (!_hotkeyRegistered)
+            {
+                success = RegisterHotKey(_hwnd, IdHotkey, modifiers | ModNoRepeat, virtualKey);
+                if (success)
+                {
+                    _hotkeyRegistered = true;
+                    _hotkeyModifiers = modifiers;
+                    _hotkeyVirtualKey = virtualKey;
+                }
+            }
         }
-        else if (!hotkeyEnabled && _hotkeyRegistered)
+        else if (_hotkeyRegistered)
         {
-            UnregisterHotKey(_hwnd, IdHotkey);
+            success = UnregisterHotKey(_hwnd, IdHotkey);
             _hotkeyRegistered = false;
         }
+
+        return success;
     }
 
     public void Dispose()
@@ -209,9 +241,110 @@ internal sealed class NativeWindowBridge : IDisposable
         return LoadIconW(IntPtr.Zero, (nint)IconSpriteIdEmpty);
     }
 
-    private const int ModControl = 0x0002;
-    private const int ModNoRepeat = 0x4000;
-    private const int VkSpace = 0x20;
+    internal const uint ModAlt = 0x0001;
+    internal const uint ModControl = 0x0002;
+    internal const uint ModShift = 0x0004;
+    internal const uint ModWin = 0x0008;
+    internal const uint ModNoRepeat = 0x4000;
+    internal const uint VkSpace = 0x20;
+
+    /// <summary>
+    /// Değiştirici tuşları ve sanal tuş kodunu okunabilir bir kombinasyona
+    /// dönüştürür. Örn. (Control|Alt, P) -> "Ctrl+Alt+P".
+    /// </summary>
+    internal static string FormatHotkey(uint modifiers, uint virtualKey)
+    {
+        var sb = new StringBuilder();
+        if ((modifiers & ModControl) != 0)
+        {
+            sb.Append("Ctrl+");
+        }
+        if ((modifiers & ModAlt) != 0)
+        {
+            sb.Append("Alt+");
+        }
+        if ((modifiers & ModShift) != 0)
+        {
+            sb.Append("Shift+");
+        }
+        if ((modifiers & ModWin) != 0)
+        {
+            sb.Append("Win+");
+        }
+
+        if (virtualKey >= (uint)VirtualKey.Number0 && virtualKey <= (uint)VirtualKey.Number9)
+        {
+            sb.Append((char)('0' + virtualKey - (uint)VirtualKey.Number0));
+        }
+        else
+        {
+            var name = Enum.GetName(typeof(VirtualKey), virtualKey) ?? virtualKey.ToString();
+            sb.Append(name);
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// "Ctrl+Space" gibi bir kombinasyon metnini değiştirici bayraklarına ve
+    /// sanal tuş koduna çevirir. Geçersiz metinlerde false döner.
+    /// </summary>
+    internal static bool TryParseHotkey(string? text, out uint modifiers, out uint virtualKey)
+    {
+        modifiers = 0;
+        virtualKey = 0;
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        var parts = text.Split('+', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (parts.Length < 2)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < parts.Length - 1; i++)
+        {
+            var modifier = parts[i].ToLowerInvariant() switch
+            {
+                "ctrl" => ModControl,
+                "alt" => ModAlt,
+                "shift" => ModShift,
+                "win" => ModWin,
+                _ => 0u,
+            };
+
+            if (modifier == 0)
+            {
+                return false;
+            }
+
+            modifiers |= modifier;
+        }
+
+        var keyName = parts[^1];
+        if (keyName.Length == 1 && keyName[0] is >= '0' and <= '9')
+        {
+            virtualKey = (uint)((int)VirtualKey.Number0 + keyName[0] - '0');
+        }
+        else if (!Enum.TryParse(keyName, ignoreCase: true, out VirtualKey key) || key == VirtualKey.None)
+        {
+            return false;
+        }
+        else
+        {
+            virtualKey = (uint)key;
+        }
+
+        return modifiers != 0 && virtualKey != 0;
+    }
+
+    private static (uint Modifiers, uint VirtualKey) ParseHotkeyOrDefault(string? hotkey)
+        => TryParseHotkey(hotkey, out var modifiers, out var virtualKey)
+            ? (modifiers, virtualKey)
+            : (ModControl, VkSpace);
 
     [StructLayout(LayoutKind.Sequential)]
     private struct NativePoint

@@ -19,12 +19,26 @@ public sealed partial class MainWindow : Window
 {
     private const int DwmwaUseImmersiveDarkMode = 20;
 
+    private const int SwpNosize = 0x0001;
+    private const int SwpNomove = 0x0002;
+    private const int SwpShowwindow = 0x0040;
+    private static readonly nint HwndTopmost = new(-1);
+    private static readonly nint HwndNotopmost = new(-2);
+
     private NativeWindowBridge? _native;
     private bool _isExitingFromTray;
     private DispatcherTimer? _backupTimer;
 
     [DllImport("dwmapi.dll")]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attribute, ref int attributeValue, int attributeSize);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(nint hWnd);
 
     public MainWindow()
     {
@@ -75,9 +89,13 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// Tepsi ikonu ve global kısayol davranışını mevcut ayarlara göre günceller.
+    /// Global kısayol istenen kombinasyonla kaydedilemezse false döner.
     /// </summary>
-    public void ApplyNativeSettings()
-        => _native?.ApplySettings(AppSettings.Current.MinimizeToTray, AppSettings.Current.GlobalHotkeyEnabled);
+    public bool ApplyNativeSettings()
+    {
+        var settings = AppSettings.Current;
+        return _native?.ApplySettings(settings.MinimizeToTray, settings.GlobalHotkeyEnabled, settings.GlobalHotkey) ?? true;
+    }
 
     private void OnAppWindowClosing(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowClosingEventArgs args)
     {
@@ -120,6 +138,28 @@ public sealed partial class MainWindow : Window
 
             AppWindow.Show();
             Activate();
+            BringToFront();
+        }
+    }
+
+    /// <summary>
+    /// Pencereyi diğer pencerelerin üzerine getirir ve öne alır. Kısa süreli
+    /// TOPMOST ipucu, kısayol/tepki ile çağrıldığında arka plandaki bir
+    /// uygulamanın örtmesine karşı güvenilir sonuç verir.
+    /// </summary>
+    private void BringToFront()
+    {
+        try
+        {
+            var hwnd = WindowNative.GetWindowHandle(this);
+
+            _ = SetWindowPos(hwnd, HwndTopmost, 0, 0, 0, 0, (uint)(SwpNomove | SwpNosize | SwpShowwindow));
+            _ = SetWindowPos(hwnd, HwndNotopmost, 0, 0, 0, 0, (uint)(SwpNomove | SwpNosize));
+            _ = SetForegroundWindow(hwnd);
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException)
+        {
+            // Pencere öne getirilemezse mevcut durum korunur.
         }
     }
 

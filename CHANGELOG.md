@@ -3,6 +3,21 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [0.8.0] - 2026-09-11
+
+### Eklendi
+
+- Global kısayol kombinasyonu artık kullanıcı tarafından atanabiliyor:
+  Ayarlar'daki kısayol kutusuna tıklayıp istenen kombinasyona basılınca
+  (ör. `Ctrl+Alt+P`) kaydedilir ve pencere göster/gizle için kullanılır.
+  Değiştirici tuş kontrolü yapılır; kombinasyon başka bir uygulamada
+  kullanılıyorsa uyarı gösterilir.
+
+### Düzeltildi
+
+- Uygulama global kısayol veya sistem tepsisi ile çağrıldığında pencere
+  artık diğer pencerelerin üzerinde öne getiriliyor.
+
 ## [0.7.0] - 2026-09-10
 
 ### Eklendi

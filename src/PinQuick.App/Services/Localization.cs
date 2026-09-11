@@ -190,7 +190,12 @@ public static class Loc
         ["CardSizeMedium"] = "Orta",
         ["CardSizeLarge"] = "Büyük",
         ["MinimizeToTrayLabel"] = "Pencere kapatıldığında tepsiye küçült",
-        ["GlobalHotkeyLabel"] = "Global kısayol (Ctrl+Space pencereyi göster/gizle)",
+        ["GlobalHotkeyLabel"] = "Global kısayol (pencereyi göster/gizle)",
+        ["HotkeyCaptureLabel"] = "Kısayol kombinasyonu",
+        ["HotkeyCaptureHint"] = "Kutuya tıklayın ve istediğiniz tuş kombinasyonuna basın.",
+        ["HotkeyNeedModifier"] = "Kısayol en az bir değiştirici tuş içermelidir (Ctrl, Alt, Shift veya Win).",
+        ["HotkeyRegistrationFailedTitle"] = "Kısayol ayarlanamadı",
+        ["HotkeyRegistrationFailedMessage"] = "Bu kombinasyon başka bir uygulama tarafından kullanılıyor olabilir. Farklı bir kombinasyon deneyin.",
         ["RestartRequiredMessage"] = "Dil değişikliği için uygulamanın yeniden başlatılması gerekir. Şimdi yeniden başlatılsın mı?",
         ["RestartButton"] = "Yeniden Başlat",
 
@@ -406,7 +411,12 @@ public static class Loc
         ["CardSizeMedium"] = "Medium",
         ["CardSizeLarge"] = "Large",
         ["MinimizeToTrayLabel"] = "Minimize to tray when the window is closed",
-        ["GlobalHotkeyLabel"] = "Global hotkey (Ctrl+Space show/hide window)",
+        ["GlobalHotkeyLabel"] = "Global hotkey (show/hide window)",
+        ["HotkeyCaptureLabel"] = "Hotkey combination",
+        ["HotkeyCaptureHint"] = "Click the box and press your desired key combination.",
+        ["HotkeyNeedModifier"] = "A hotkey needs at least one modifier key (Ctrl, Alt, Shift or Win).",
+        ["HotkeyRegistrationFailedTitle"] = "Hotkey could not be set",
+        ["HotkeyRegistrationFailedMessage"] = "This combination may already be in use by another application. Try a different one.",
         ["RestartRequiredMessage"] = "The app must restart to apply the language change. Restart now?",
         ["RestartButton"] = "Restart",
 
@@ -554,6 +564,11 @@ public static class Strings
     public static string CardSizeLarge => Loc.T("CardSizeLarge");
     public static string MinimizeToTrayLabel => Loc.T("MinimizeToTrayLabel");
     public static string GlobalHotkeyLabel => Loc.T("GlobalHotkeyLabel");
+    public static string HotkeyCaptureLabel => Loc.T("HotkeyCaptureLabel");
+    public static string HotkeyCaptureHint => Loc.T("HotkeyCaptureHint");
+    public static string HotkeyNeedModifier => Loc.T("HotkeyNeedModifier");
+    public static string HotkeyRegistrationFailedTitle => Loc.T("HotkeyRegistrationFailedTitle");
+    public static string HotkeyRegistrationFailedMessage => Loc.T("HotkeyRegistrationFailedMessage");
     public static string RestartButton => Loc.T("RestartButton");
 
     public static string CloseButton => Loc.T("CloseButton");

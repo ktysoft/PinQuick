@@ -199,10 +199,24 @@ public sealed partial class MainPage : Page
         settings.Language = dialog.SelectedLanguage;
         settings.MinimizeToTray = dialog.MinimizeToTrayEnabled;
         settings.GlobalHotkeyEnabled = dialog.GlobalHotkeyEnabled;
+        settings.GlobalHotkey = dialog.SelectedGlobalHotkey;
         settings.AutoBackupFrequency = dialog.SelectedAutoBackup;
         settings.Save();
         StartupManager.SetEnabled(dialog.StartupEnabled);
-        (App.Window as MainWindow)?.ApplyNativeSettings();
+        var hotkeyOk = (App.Window as MainWindow)?.ApplyNativeSettings() ?? true;
+
+        if (!hotkeyOk)
+        {
+            var warning = new ContentDialog
+            {
+                Title = Loc.T("HotkeyRegistrationFailedTitle"),
+                Content = Loc.T("HotkeyRegistrationFailedMessage"),
+                CloseButtonText = Loc.T("CloseButton"),
+                DefaultButton = ContentDialogButton.Close,
+                XamlRoot = RootGrid.XamlRoot,
+            };
+            await warning.ShowAsync();
+        }
 
         if (languageChanged)
         {
