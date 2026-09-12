@@ -13,5 +13,6 @@ public interface IPinRepository
     Task<int> CountAsync(CancellationToken cancellationToken = default);
     Task<Pin?> FindDuplicateAsync(PinType type, string target, CancellationToken cancellationToken = default);
     Task AddToCollectionAsync(long pinId, long collectionId, CancellationToken cancellationToken = default);
+    Task RemoveFromCollectionAsync(long pinId, long collectionId, CancellationToken cancellationToken = default);
     Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default);
 }

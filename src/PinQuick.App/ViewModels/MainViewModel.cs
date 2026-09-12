@@ -723,6 +723,36 @@ public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
         }
     }
 
+    /// <summary>
+    /// Birden çok pini bir koleksiyondan çıkarır. Üye olmayan pinler atlanır.
+    /// </summary>
+    public async Task RemoveSelectedFromCollectionAsync(IReadOnlyList<long> ids, long collectionId)
+    {
+        if (ids is null || ids.Count == 0 || collectionId <= 0 || _allPins is null)
+        {
+            return;
+        }
+
+        var idSet = ids.ToHashSet();
+        var changed = false;
+        foreach (var pin in _allPins.Where(p => idSet.Contains(p.Id)))
+        {
+            if (!pin.CollectionIds.Contains(collectionId))
+            {
+                continue;
+            }
+
+            await _pinManager.RemoveFromCollectionAsync(pin.Id, collectionId);
+            pin.CollectionIds.Remove(collectionId);
+            changed = true;
+        }
+
+        if (changed)
+        {
+            ApplyFilter();
+        }
+    }
+
     public async Task DeleteSelectedAsync(IReadOnlyList<long> ids)
     {
         if (ids is null || ids.Count == 0)

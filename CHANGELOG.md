@@ -3,6 +3,20 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [0.9.1] - 2026-09-12
+
+### Eklendi
+
+- "Koleksiyona Ekle" menüsünde üyelik artık anahtarlanabilir: Zaten üye olunan
+  koleksiyonlar ✓ ile gösterilir; üzerine tıklamak pini o koleksiyondan çıkarır,
+  üye olunmayan koleksiyona tıklamak ekler.
+
+### Değişti
+
+- "Yeni Koleksiyon Oluştur" menü öğesinin önündeki "+" işareti kaldırıldı.
+- Yenile butonunun ipucu düzeltildi: ham anahtar ("HeadRefreshTooltip") yerine
+  artık "Yenile (Ctrl + R): adları ve simgeleri yeniden tara" gösteriliyor.
+
 ## [0.9.0] - 2026-09-12
 
 ### Eklendi

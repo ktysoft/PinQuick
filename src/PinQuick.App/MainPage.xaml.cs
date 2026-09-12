@@ -748,11 +748,20 @@ public sealed partial class MainPage : Page
             var collectionItem = new MenuFlyoutItem
             {
                 Text = collection.Name,
-                IsEnabled = !allMembers,
                 Icon = allMembers ? new FontIcon { Glyph = "\uE73E" } : null,
             };
-            collectionItem.Click += async (_, _) => await ViewModel.AddSelectedToCollectionAsync(
-                targets.Select(t => t.Id).ToList(), collection.Id);
+            collectionItem.Click += async (_, _) =>
+            {
+                var ids = targets.Select(t => t.Id).ToList();
+                if (allMembers)
+                {
+                    await ViewModel.RemoveSelectedFromCollectionAsync(ids, collection.Id);
+                }
+                else
+                {
+                    await ViewModel.AddSelectedToCollectionAsync(ids, collection.Id);
+                }
+            };
             submenu.Items.Add(collectionItem);
         }
 

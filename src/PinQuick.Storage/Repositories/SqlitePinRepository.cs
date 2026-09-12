@@ -283,6 +283,22 @@ public sealed class SqlitePinRepository : IPinRepository
         await InsertMembershipAsync(connection, pinId, collectionId, cancellationToken);
     }
 
+    public async Task RemoveFromCollectionAsync(long pinId, long collectionId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            DELETE FROM PinCollections
+            WHERE PinId = $pinId AND CollectionId = $collectionId
+            """;
+        command.Parameters.AddWithValue("$pinId", pinId);
+        command.Parameters.AddWithValue("$collectionId", collectionId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqliteConnection(_connectionString);
