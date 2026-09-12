@@ -3,6 +3,61 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [0.9.0] - 2026-09-12
+
+### Eklendi
+
+- Kullanıcı atanabilir global kısayol: Ayarlar'da Ctrl/Shift/Alt değiştirici tuşları
+  tek tek açılıp kapatılabilir ve ana tuş klavyeden basılarak seçilir
+  (ör. CTRL+SHIFT+S, SHIFT+F9, ALT+X). Salt modifier kombinasyonlar geçersizdir;
+  atama kullanıcıya açıkça gösterilir ve sonradan değiştirilebilir.
+- Sağ tık menüsüne "Koleksiyona Ekle" eklendi: alt menünün en üstünde
+  "＋ Yeni Koleksiyon Oluştur", altında mevcut koleksiyonlar listelenir.
+  Pin zaten üye olduğu koleksiyonda ✓ işaretiyle gösterilir ve tekrar eklenmez;
+  koleksiyon yoksa yalnızca "＋ Yeni Koleksiyon Oluştur" görünür. Çoklu seçim
+  menüsünde de aynı işlev çalışır.
+- Veri modeli çoklu koleksiyon üyeliğine taşındı: bir pin birden fazla
+  koleksiyonda bulunabilir. Önceki tek `CollectionId` ilişkileri açılışta
+  otomatik olarak yeni kullanıma geçirilir (şema v2 migration).
+- Pin kartlarında koleksiyon rozetleri: pinin dahil olduğu koleksiyonlar
+  kart üzerinde küçük etiket (chip) olarak gösterilir. En fazla iki isim
+  görünür; fazlaysa `+N` olarak özetlenir. Rozete tıklayınca ilgili
+  koleksiyona geçilir.
+- Sol menüde koleksiyonlara sağ tıklayınca yönetim menüsü:
+  "Yeniden Adlandır" adı satır üzerinde inline düzenlenebilir input ile
+  değiştirir (Enter kaydeder, Esc vazgeçer), "Düzenle" mevcut koleksiyon
+  iletişimini açar, "Sil" onay alarak koleksiyonu siler (içindeki pinler korunur).
+- Koleksiyonlara sağ tıktan "Renk Seç": 10 hazır renk renk karesiyle listelenir,
+  tıklanan renk kaydedilir ve kart/sol menü rozetlerinde anında güncellenir.
+- Koleksiyon başlığındaki Düzenle / Sil butonları kaldırıldı; tüm yönetim
+  işlemleri sağ tık menüsünden yürütülür (Yeni Koleksiyon butonu korunur).
+
+### Değişti
+
+- Pin seçildiğinde sağda açılan detay/işlem paneli kaldırıldı. Pinle ilgili işlemler
+  (aç, yönetici olarak çalıştır, konumu aç, düzenle, sil, favori, koleksiyona ekle)
+  artık yalnızca sağ tık menüsünden yapılıyor; seçim yalnızca görsel olarak vurgulanıyor.
+  Çoklu seçim araç çubuğu pin alanı üzerinde kalıyor.
+- Uygulama açıldığında önceki oturumun son aramaları otomatik olarak gösterilmiyor;
+  arama kutusu başlangıçta odaklansa da "Son Aramalar" yalnızca kullanıcı arama
+  kutusuna tıkladığında veya Ctrl+K ile açtığında görülüyor.
+- Yeni pin ekleme/düzenleme ekranında dikey kaydırma çubuğu için içerikten ayrılmış
+  bir alan ayrıldı; kaydırma çubuğu butonların ve giriş alanlarının üzerine binmiyor,
+  yatay kaydırma engellendi.
+- Aydınlık modda Ayarlar ve diğer iletişim pencereleri (pin, koleksiyon) artık
+  uygulama temasıyla uyumlu görünüyor.
+- Ayarlar penceresi küçük ekran/pencere boyutlarında içerik taşarsa dikey kaydırılabilir
+  oldu; pencere boyutu tüm ayarlara erişimi engellemiyor.
+- Tema seçimi yalnızca Aydınlık ve Karanlık olarak yapılıyor: üst bardaki tema butonu
+  ve Ayarlar'daki tema kutusu "Sistem" seçeneği kaldırıldı.
+
+### Düzeltildi
+
+- Global kısayolla (Ctrl+Space) veya tepsi simgesiyle çağrıldığında pencere artık
+  diğer programların üzerinde görünüyor; Windows foreground kilitlenmesi aşılıyor.
+- Global kısayol başka bir programda kullanımda veya Windows'a ayrılmışsa kaydedilemiyor;
+  kullanıcıya anlaşılır bir uyarı gösteriliyor ve kısayol kapalı bırakılıyor.
+
 ## [0.7.0] - 2026-09-10
 
 ### Eklendi

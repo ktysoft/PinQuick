@@ -32,11 +32,20 @@ internal sealed class NativeWindowBridge : IDisposable
     private const int IconSize = 32;
     private const uint IconSpriteIdEmpty = 0;
 
+    private const nint HwndTopMost = -1;
+    private const nint HwndNotTopMost = -2;
+    private const uint SwpNoActivate = 0x0010;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpShowWindow = 0x0040;
+
     private readonly nint _hwnd;
     private readonly nint _icon;
     private nint _menu;
     private bool _trayShown;
     private bool _hotkeyRegistered;
+    private int _registeredModifiers;
+    private int _registeredVk;
     private bool _disposed;
 
     private static SubclassProcDelegate? _subclassProc;
@@ -57,12 +66,14 @@ internal sealed class NativeWindowBridge : IDisposable
     /// Sistem tepsisi ikonunu (her zaman görünür) ve global kısayolu kullanıcı
     /// ayarlarına göre açıp kapatır. Tepsi ikonu uygulama çalıştığı sürece görünür;
     /// minimizeToTray yalnızca pencere kapandığında kalıcılığı yönetir.
+    /// Kısayol zaten başka bir program tarafından kullanılıyorsa RegisterHotKey
+    /// başarısız olur ve false döner.
     /// </summary>
-    public void ApplySettings(bool minimizeToTray, bool hotkeyEnabled)
+    public bool ApplySettings(bool minimizeToTray, bool hotkeyEnabled, int modifiers, int vk)
     {
         if (_disposed)
         {
-            return;
+            return true;
         }
 
         if (!_trayShown)
@@ -71,16 +82,51 @@ internal sealed class NativeWindowBridge : IDisposable
             _trayShown = true;
         }
 
-        if (hotkeyEnabled && !_hotkeyRegistered)
+        if (!hotkeyEnabled)
         {
-            RegisterHotKey(_hwnd, IdHotkey, ModControl | ModNoRepeat, VkSpace);
-            _hotkeyRegistered = true;
+            if (_hotkeyRegistered)
+            {
+                UnregisterHotKey(_hwnd, IdHotkey);
+                _hotkeyRegistered = false;
+                _registeredVk = 0;
+            }
+
+            return true;
         }
-        else if (!hotkeyEnabled && _hotkeyRegistered)
+
+        if (_hotkeyRegistered && _registeredModifiers == modifiers && _registeredVk == vk)
+        {
+            return true;
+        }
+
+        if (_hotkeyRegistered)
         {
             UnregisterHotKey(_hwnd, IdHotkey);
             _hotkeyRegistered = false;
         }
+
+        if (RegisterHotKey(_hwnd, IdHotkey, (uint)(modifiers | Hotkey.ModNoRepeat), (uint)vk))
+        {
+            _hotkeyRegistered = true;
+            _registeredModifiers = modifiers;
+            _registeredVk = vk;
+            return true;
+        }
+
+        _registeredVk = 0;
+        return false;
+    }
+
+    /// <summary>
+    /// Pencereyi diğer tüm (topmost olmayan) pencerelerin üzerine güvenilir şekilde getirir.
+    /// Windows foreground kilitlenmesini aşmak için pencere kısa süre topmost yapılır, sonra
+    /// normal katmana geri alınır ve öne alınır.
+    /// </summary>
+    internal static void BringToFront(nint hwnd)
+    {
+        SetWindowPos(hwnd, HwndTopMost, 0, 0, 0, 0, SwpNoActivate | SwpNoMove | SwpNoSize | SwpShowWindow);
+        SetWindowPos(hwnd, HwndNotTopMost, 0, 0, 0, 0, SwpNoActivate | SwpNoMove | SwpNoSize);
+        SetForegroundWindow(hwnd);
     }
 
     public void Dispose()
@@ -209,10 +255,6 @@ internal sealed class NativeWindowBridge : IDisposable
         return LoadIconW(IntPtr.Zero, (nint)IconSpriteIdEmpty);
     }
 
-    private const int ModControl = 0x0002;
-    private const int ModNoRepeat = 0x4000;
-    private const int VkSpace = 0x20;
-
     [StructLayout(LayoutKind.Sequential)]
     private struct NativePoint
     {
@@ -286,4 +328,7 @@ internal sealed class NativeWindowBridge : IDisposable
 
     [DllImport("user32.dll")]
     private static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool SetWindowPos(nint hWnd, nint hWndInsertAfter, int x, int y, int cx, int cy, uint uFlags);
 }

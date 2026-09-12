@@ -12,5 +12,6 @@ public interface IPinRepository
     Task ReorderAsync(IReadOnlyList<(long Id, int SortOrder)> orderedItems, CancellationToken cancellationToken = default);
     Task<int> CountAsync(CancellationToken cancellationToken = default);
     Task<Pin?> FindDuplicateAsync(PinType type, string target, CancellationToken cancellationToken = default);
+    Task AddToCollectionAsync(long pinId, long collectionId, CancellationToken cancellationToken = default);
     Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default);
 }

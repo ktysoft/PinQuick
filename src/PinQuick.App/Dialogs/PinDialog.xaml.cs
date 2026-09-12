@@ -42,7 +42,7 @@ public sealed partial class PinDialog : ContentDialog
             WorkingDirectoryBox.Text = existing.WorkingDirectory;
             DescriptionBox.Text = existing.Description;
             TagsBox.Text = existing.Tags;
-            CollectionCombo.SelectedItem = _collections.FirstOrDefault(c => c.Id == existing.CollectionId);
+            CollectionCombo.SelectedItem = _collections.FirstOrDefault(c => existing.CollectionIds.Contains(c.Id));
             FavoriteCheck.IsChecked = existing.IsFavorite;
             AdminCheck.IsChecked = existing.RunAsAdministrator;
             IconBox.Text = existing.Icon;
@@ -219,7 +219,6 @@ public sealed partial class PinDialog : ContentDialog
             Icon = IconBox.Text?.Trim() ?? string.Empty,
             Description = DescriptionBox.Text?.Trim() ?? string.Empty,
             Tags = TagsBox.Text?.Trim() ?? string.Empty,
-            CollectionId = (CollectionCombo.SelectedItem as Collection)?.Id,
             IsFavorite = FavoriteCheck.IsChecked == true,
             RunAsAdministrator = AdminCheck.IsChecked == true,
             IsEnabled = _editing?.IsEnabled ?? true,
@@ -232,6 +231,16 @@ public sealed partial class PinDialog : ContentDialog
             CustomColor = _editing?.CustomColor ?? string.Empty,
             CustomShortcut = _editing?.CustomShortcut ?? string.Empty,
         };
+
+        if (_editing is not null)
+        {
+            Result.CollectionIds.AddRange(_editing.CollectionIds);
+        }
+
+        if (CollectionCombo.SelectedItem is Collection selected && !Result.CollectionIds.Contains(selected.Id))
+        {
+            Result.CollectionIds.Add(selected.Id);
+        }
     }
 
     private void ShowError(string message, ContentDialogButtonClickEventArgs args)

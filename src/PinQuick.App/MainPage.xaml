@@ -86,19 +86,43 @@
                     <TextBlock Text="{x:Bind TypeDisplay}"
                                Opacity="0.7"
                                FontSize="12" />
-                    <StackPanel Orientation="Horizontal"
-                                Spacing="5"
-                                Visibility="{x:Bind HasCollection, Converter={StaticResource BoolToVisibility}}">
-                        <Ellipse Width="8"
-                                 Height="8"
-                                 Margin="0,0,0,0"
-                                 VerticalAlignment="Center"
-                                 Fill="{x:Bind CollectionColor, Converter={StaticResource HexToBrush}}" />
-                        <TextBlock Text="{x:Bind CollectionName}"
-                                   Opacity="0.8"
+                    <ItemsControl ItemsSource="{x:Bind CardCollections, Mode=OneWay}"
+                                  Visibility="{x:Bind HasCardCollections, Converter={StaticResource BoolToVisibility}}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="4" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="mdl:Collection">
+                                <Border Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                        CornerRadius="7"
+                                        Padding="6,2"
+                                        Tapped="CollectionChip_Tapped">
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Ellipse Width="7"
+                                                 Height="7"
+                                                 VerticalAlignment="Center"
+                                                 Fill="{x:Bind Color, Converter={StaticResource HexToBrush}}" />
+                                        <TextBlock Text="{x:Bind Name}"
+                                                   FontSize="11"
+                                                   Opacity="0.85"
+                                                   MaxWidth="90"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Border Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                            CornerRadius="7"
+                            Padding="6,2"
+                            HorizontalAlignment="Left"
+                            Visibility="{x:Bind HasExtraCollections, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{x:Bind CardCollectionsExtra}"
                                    FontSize="11"
-                                   TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
+                                   Opacity="0.85" />
+                    </Border>
                 </StackPanel>
             </Grid>
         </DataTemplate>
@@ -114,12 +138,13 @@
             </Grid>
         </DataTemplate>
 
-        <DataTemplate x:Key="CollectionTemplate" x:DataType="mdl:Collection">
+        <DataTemplate x:Key="CollectionTemplate" x:DataType="vm:CollectionItemViewModel">
             <Grid ColumnSpacing="10"
                   AllowDrop="True"
                   DragOver="CollectionItem_DragOver"
                   Drop="CollectionItem_Drop"
-                  Tag="{x:Bind Id}">
+                  Tag="{x:Bind Id}"
+                  RightTapped="CollectionItem_RightTapped">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -131,10 +156,20 @@
                          VerticalAlignment="Center"
                          Fill="{x:Bind Color, Converter={StaticResource HexToBrush}, FallbackValue=Transparent}" />
                 <FontIcon Grid.Column="1" Glyph="&#xE8B7;" FontSize="16" />
-                <TextBlock Grid.Column="2"
-                           Text="{x:Bind Name}"
-                           VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis" />
+                <Grid Grid.Column="2">
+                    <TextBlock Text="{x:Bind Name}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Visibility="{x:Bind IsRenaming, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
+                    <TextBox Text="{x:Bind RenameText, Mode=TwoWay}"
+                             VerticalAlignment="Center"
+                             FontSize="14"
+                             Padding="2,0"
+                             MinWidth="140"
+                             Visibility="{x:Bind IsRenaming, Converter={StaticResource BoolToVisibility}}"
+                             KeyDown="CollectionRenameBox_KeyDown"
+                             LostFocus="CollectionRenameBox_LostFocus" />
+                </Grid>
             </Grid>
         </DataTemplate>
 
@@ -295,7 +330,6 @@
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="210" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!-- Sidebar -->
@@ -350,8 +384,6 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Button Grid.Column="0"
                             Padding="4"
@@ -367,28 +399,16 @@
                                VerticalAlignment="Center" />
                     <Button Grid.Column="2"
                             Padding="6"
-                            ToolTipService.ToolTip="{x:Bind svc:Strings.SideEditCollectionTooltip}"
-                            Click="EditCollectionButton_Click">
-                        <FontIcon Glyph="&#xE70F;" FontSize="12" />
-                    </Button>
-                    <Button Grid.Column="3"
-                            Padding="6"
                             ToolTipService.ToolTip="{x:Bind svc:Strings.SideNewCollectionTooltip}"
                             Click="NewCollectionButton_Click">
                         <FontIcon Glyph="&#xE710;" FontSize="12" />
-                    </Button>
-                    <Button Grid.Column="4"
-                            Padding="6"
-                            ToolTipService.ToolTip="{x:Bind svc:Strings.SideDeleteCollectionTooltip}"
-                            Click="DeleteCollectionButton_Click">
-                        <FontIcon Glyph="&#xE74D;" FontSize="12" />
                     </Button>
                 </Grid>
 
                 <ListView x:Name="CollectionsList"
                           Grid.Row="4"
                           ItemsSource="{x:Bind ViewModel.Collections}"
-                          SelectedItem="{x:Bind ViewModel.SelectedCollection, Mode=TwoWay}"
+                          SelectedItem="{x:Bind ViewModel.SelectedCollectionItem, Mode=TwoWay}"
                           ItemTemplate="{StaticResource CollectionTemplate}"
                           SelectionMode="Single"
                           Margin="0,0,0,8" />
@@ -459,31 +479,6 @@ DoubleTapped="PinGrid_DoubleTapped"
                             Style="{StaticResource AccentButtonStyle}"
                             Click="NewPinButton_Click" />
                 </StackPanel>
-            </Grid>
-
-            <!-- Detail panel -->
-            <Grid x:Name="DetailPanel"
-                  Grid.Column="2"
-                  Width="300"
-                  Visibility="Collapsed"
-                  Padding="16"
-                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                  BorderThickness="1,0,0,0">
-                <ScrollViewer>
-                    <StackPanel Spacing="10">
-                        <StackPanel Orientation="Horizontal" Spacing="10">
-                            <Grid Width="34" Height="34">
-                                <FontIcon x:Name="DetailIcon" FontSize="26" />
-                                <Image x:Name="DetailIconThumb"
-                                       Width="32"
-                                       Height="32"
-                                       Stretch="Uniform"
-                                       Visibility="Collapsed" />
-                            </Grid>
-                            <StackPanel>
-                                <TextBlock x:Name="DetailTypeDisplay" FontSize="12" Opacity="0.7" />
-                                <TextBlock x:Name="DetailTitle" FontSize="18" FontWeight="Bold" TextWrapping="Wrap" />
-</StackPanel>
 
                 <!-- Çoklu seçim araç çubuğu -->
                 <Border x:Name="SelectionBar"
@@ -513,45 +508,9 @@ DoubleTapped="PinGrid_DoubleTapped"
                                 Click="SelectionClearButton_Click" />
                     </StackPanel>
                 </Border>
-                        </StackPanel>
-
-                        <TextBlock x:Name="DetailTarget"
-                                   FontSize="12"
-                                   Opacity="0.8"
-                                   TextWrapping="Wrap"
-                                   IsTextSelectionEnabled="True" />
-
-                        <TextBlock x:Name="DetailDescription"
-                                   TextWrapping="Wrap"
-                                   Visibility="Collapsed" />
-
-                        <TextBlock x:Name="DetailTags"
-                   FontSize="12"
-                   Opacity="0.7"
-                   Visibility="Collapsed" />
-
-                        <TextBlock x:Name="DetailLastUsed"
-                                   FontSize="12"
-                                   Opacity="0.7"
-                                   Visibility="Collapsed" />
-
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Button x:Name="DetailOpenButton" Grid.Column="0" Content="{x:Bind svc:Strings.DetailOpen}" Click="LaunchButton_Click" Style="{StaticResource AccentButtonStyle}" />
-                            <Button x:Name="DetailFavoriteButton" Grid.Column="1" Content="{x:Bind svc:Strings.DetailFavorite}" Click="FavoriteButton_Click" />
-                        </Grid>
-
-                        <Button x:Name="DetailRunAsAdminButton" Content="{x:Bind svc:Strings.DetailRunAsAdmin}" Click="LaunchAdminButton_Click" />
-                        <Button x:Name="DetailOpenLocationButton" Content="{x:Bind svc:Strings.DetailOpenLocation}" Click="OpenLocationButton_Click" />
-                        <Button x:Name="DetailEditButton" Content="{x:Bind svc:Strings.DetailEdit}" Click="EditButton_Click" />
-                        <Button x:Name="DetailDeleteButton" Content="{x:Bind svc:Strings.DetailDelete}" Click="DeleteButton_Click" />
-                    </StackPanel>
-                </ScrollViewer>
             </Grid>
-        </Grid>
+
+            </Grid>
 
         <!-- Onboarding turu: karartılmış overlay + hedef vurgu + bilgi kartı -->
         <Grid x:Name="TourOverlay"

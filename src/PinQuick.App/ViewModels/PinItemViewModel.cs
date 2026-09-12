@@ -68,37 +68,50 @@ public sealed partial class PinItemViewModel : ObservableObject
     public bool IsBroken => PinHealth.IsBroken(Pin);
 
     /// <summary>
-    /// Pinin dahil olduğu koleksiyonun adı (koleksiyon yoksa boş).
+    /// Pinin dahil olduğu koleksiyonlar. Kartta en fazla iki tanesi rozet olarak
+    /// gösterilir; fazlası <see cref="CardCollectionsExtra"/> ile özetlenir.
     /// </summary>
-    public string CollectionName { get; private set; } = string.Empty;
+    public IReadOnlyList<Collection> CardCollections { get; private set; } = Array.Empty<Collection>();
 
     /// <summary>
-    /// Pinin dahil olduğu koleksiyonun rengi ("#RRGGBB" veya boş).
+    /// Kartta gösterilen rozetlerin ardına eklenen özet (+N) metni.
     /// </summary>
-    public string CollectionColor { get; private set; } = string.Empty;
+    public string CardCollectionsExtra { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Pin bir koleksiyona dahil ise <c>true</c>.
+    /// Pin en az bir koleksiyona dahil ise <c>true</c>.
     /// </summary>
-    public bool HasCollection => !string.IsNullOrEmpty(CollectionName);
+    public bool HasCardCollections => CardCollections.Count > 0;
+
+    /// <summary>
+    /// Rozetlerin ardına eklenmesi gereken ek sayı rozeti var ise <c>true</c>.
+    /// </summary>
+    public bool HasExtraCollections => !string.IsNullOrEmpty(CardCollectionsExtra);
 
     /// <summary>
     /// Pinin koleksiyon bilgisini günceller ve görünümü yeniler.
     /// </summary>
-    public void SetCollection(Collection? collection)
+    public void SetCollections(IReadOnlyDictionary<long, Collection> collectionMap, IEnumerable<long> collectionIds)
     {
-        var name = collection?.Name ?? string.Empty;
-        var color = collection?.Color ?? string.Empty;
-        if (CollectionName == name && CollectionColor == color)
+        const int maxShown = 2;
+        var collections = new List<Collection>(maxShown + 1);
+        foreach (var collectionId in collectionIds)
         {
-            return;
+            if (collectionMap.TryGetValue(collectionId, out var collection) && collection is not null)
+            {
+                collections.Add(collection);
+            }
         }
 
-        CollectionName = name;
-        CollectionColor = color;
-        OnPropertyChanged(nameof(CollectionName));
-        OnPropertyChanged(nameof(CollectionColor));
-        OnPropertyChanged(nameof(HasCollection));
+        var shown = collections.Take(maxShown).ToList();
+        var extra = collections.Count - shown.Count;
+
+        CardCollections = shown;
+        CardCollectionsExtra = extra > 0 ? $"+{extra}" : string.Empty;
+        OnPropertyChanged(nameof(CardCollections));
+        OnPropertyChanged(nameof(CardCollectionsExtra));
+        OnPropertyChanged(nameof(HasCardCollections));
+        OnPropertyChanged(nameof(HasExtraCollections));
     }
 
     /// <summary>

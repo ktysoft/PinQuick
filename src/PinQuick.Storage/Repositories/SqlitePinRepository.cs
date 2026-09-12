@@ -31,7 +31,14 @@ public sealed class SqlitePinRepository : IPinRepository
         command.Parameters.AddWithValue("$id", id);
 
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        return await reader.ReadAsync(cancellationToken) ? ReadPin(reader) : null;
+        Pin? pin = await reader.ReadAsync(cancellationToken) ? ReadPin(reader) : null;
+
+        if (pin is not null)
+        {
+            await LoadMembershipsAsync(connection, pin, cancellationToken);
+        }
+
+        return pin;
     }
 
     public async Task<IReadOnlyList<Pin>> GetAllAsync(CancellationToken cancellationToken = default)
@@ -56,7 +63,48 @@ public sealed class SqlitePinRepository : IPinRepository
             pins.Add(ReadPin(reader));
         }
 
+        await LoadMembershipsAsync(connection, pins, cancellationToken);
         return pins;
+    }
+
+    /// <summary>
+    /// Pinlerin koleksiyon üyeliklerini (PinCollections) yükleyip her pinin
+    /// CollectionIds listesine yazar.
+    /// </summary>
+    private static async Task LoadMembershipsAsync(SqliteConnection connection, IEnumerable<Pin> pins, CancellationToken cancellationToken)
+    {
+        var pinById = pins.ToDictionary(p => p.Id);
+        if (pinById.Count == 0)
+        {
+            return;
+        }
+
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT PinId, CollectionId FROM PinCollections";
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var pinId = reader.GetInt64(0);
+            if (pinById.TryGetValue(pinId, out var pin))
+            {
+                pin.CollectionIds.Add(reader.GetInt64(1));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Tek pinin koleksiyon üyeliklerini yükler.
+    /// </summary>
+    private static async Task LoadMembershipsAsync(SqliteConnection connection, Pin pin, CancellationToken cancellationToken)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT CollectionId FROM PinCollections WHERE PinId = $pinId";
+        command.Parameters.AddWithValue("$pinId", pin.Id);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            pin.CollectionIds.Add(reader.GetInt64(0));
+        }
     }
 
     public async Task<long> AddAsync(Pin pin, CancellationToken cancellationToken = default)
@@ -84,7 +132,27 @@ public sealed class SqlitePinRepository : IPinRepository
             throw new InvalidOperationException("Pin eklenirken kimlik alınamadı.");
         }
 
-        return Convert.ToInt64(result);
+        var id = Convert.ToInt64(result);
+
+        foreach (var collectionId in pin.CollectionIds.Distinct())
+        {
+            await InsertMembershipAsync(connection, id, collectionId, cancellationToken);
+        }
+
+        return id;
+    }
+
+    private static async Task InsertMembershipAsync(SqliteConnection connection, long pinId, long collectionId, CancellationToken cancellationToken)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT OR IGNORE INTO PinCollections (PinId, CollectionId)
+            VALUES ($pinId, $collectionId);
+            """;
+        command.Parameters.AddWithValue("$pinId", pinId);
+        command.Parameters.AddWithValue("$collectionId", collectionId);
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Pin pin, CancellationToken cancellationToken = default)
@@ -208,13 +276,20 @@ public sealed class SqlitePinRepository : IPinRepository
         return await reader.ReadAsync(cancellationToken) ? ReadPin(reader) : null;
     }
 
+    public async Task AddToCollectionAsync(long pinId, long collectionId, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+        await InsertMembershipAsync(connection, pinId, collectionId, cancellationToken);
+    }
+
     public async Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync(cancellationToken);
 
         using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE Pins SET CollectionId = NULL WHERE CollectionId = $collectionId";
+        command.CommandText = "DELETE FROM PinCollections WHERE CollectionId = $collectionId";
         command.Parameters.AddWithValue("$collectionId", collectionId);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }

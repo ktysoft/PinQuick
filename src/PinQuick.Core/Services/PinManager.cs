@@ -68,6 +68,16 @@ public sealed class PinManager
 
     public Task ClearCollectionAsync(long collectionId, CancellationToken cancellationToken = default)
         => _repository.ClearCollectionAsync(collectionId, cancellationToken);
+
+    public async Task AddToCollectionAsync(long pinId, long collectionId, CancellationToken cancellationToken = default)
+    {
+        if (pinId <= 0 || collectionId <= 0)
+        {
+            throw new ArgumentException("Pin ve koleksiyon kimlikleri geçersiz.");
+        }
+
+        await _repository.AddToCollectionAsync(pinId, collectionId, cancellationToken);
+    }
 }
 
 public sealed class DuplicatePinException(Pin duplicate) : Exception("Bu öğe zaten pinlenmiş.")

@@ -26,8 +26,12 @@ Desktop.ini
 # Installer output (release assets)
 Installers/
 
+# Publish output (bin içindeki publish değil, kök publish/)
+publish/
+
 # KTYSoft
 AGENTS.md
 
 # Yerel notlar
 bilinen hatalar.txt
+yapılacaklar.txt

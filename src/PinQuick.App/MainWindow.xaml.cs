@@ -75,9 +75,14 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// Tepsi ikonu ve global kısayol davranışını mevcut ayarlara göre günceller.
+    /// Global kısayol kaydedilemezse (başka programda kullanımda) false döner.
     /// </summary>
-    public void ApplyNativeSettings()
-        => _native?.ApplySettings(AppSettings.Current.MinimizeToTray, AppSettings.Current.GlobalHotkeyEnabled);
+    public bool ApplyNativeSettings()
+        => _native?.ApplySettings(
+            AppSettings.Current.MinimizeToTray,
+            AppSettings.Current.GlobalHotkeyEnabled,
+            AppSettings.Current.HotkeyModifiers,
+            AppSettings.Current.HotkeyKey) ?? true;
 
     private void OnAppWindowClosing(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowClosingEventArgs args)
     {
@@ -119,6 +124,7 @@ public sealed partial class MainWindow : Window
             }
 
             AppWindow.Show();
+            NativeWindowBridge.BringToFront(WindowNative.GetWindowHandle(this));
             Activate();
         }
     }

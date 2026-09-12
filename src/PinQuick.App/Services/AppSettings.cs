@@ -25,6 +25,10 @@ public sealed class AppSettings
 
     public bool GlobalHotkeyEnabled { get; set; }
 
+    public int HotkeyModifiers { get; set; } = Hotkey.ModControl;
+
+    public int HotkeyKey { get; set; } = Hotkey.VkSpace;
+
     public bool IsOnboardingCompleted { get; set; }
 
     public int? WindowWidth { get; set; }

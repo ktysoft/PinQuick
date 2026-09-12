@@ -10,14 +10,18 @@
     PrimaryButtonText="{x:Bind svc:Strings.SaveButton}"
     SecondaryButtonText="{x:Bind svc:Strings.CancelButton}"
     DefaultButton="Primary"
+    PrimaryButtonClick="Dialog_PrimaryButtonClick"
     MinWidth="380"
     mc:Ignorable="d">
 
-    <StackPanel Spacing="16" Margin="8">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  MaxHeight="560"
+                  Padding="0,0,8,4">
+        <StackPanel Spacing="16" MinWidth="320" Margin="0,0,4,0">
         <TextBlock Text="{x:Bind svc:Strings.ThemeLabel}" FontWeight="SemiBold" />
         <ComboBox x:Name="ThemeCombo"
                   HorizontalAlignment="Stretch">
-            <ComboBoxItem Content="{x:Bind svc:Strings.ThemeSystem}" />
             <ComboBoxItem Content="{x:Bind svc:Strings.ThemeDark}" />
             <ComboBoxItem Content="{x:Bind svc:Strings.ThemeLight}" />
         </ComboBox>
@@ -39,7 +43,48 @@
 
         <ToggleSwitch x:Name="GlobalHotkeyToggle"
                       Header="{x:Bind svc:Strings.GlobalHotkeyLabel}"
-                      HorizontalAlignment="Left" />
+                      HorizontalAlignment="Left"
+                      Toggled="GlobalHotkeyToggle_Toggled" />
+
+        <StackPanel x:Name="HotkeyEditor"
+                    Spacing="8">
+            <TextBlock Text="{x:Bind svc:Strings.HotkeyModifiersLabel}"
+                       FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ToggleButton x:Name="ModControlButton"
+                              Content="{x:Bind svc:Strings.HotkeyModifierCtrl}"
+                              Tag="2"
+                              MinWidth="64"
+                              Checked="ModifierToggle_Checked"
+                              Unchecked="ModifierToggle_Unchecked" />
+                <ToggleButton x:Name="ModShiftButton"
+                              Content="{x:Bind svc:Strings.HotkeyModifierShift}"
+                              Tag="4"
+                              MinWidth="64"
+                              Checked="ModifierToggle_Checked"
+                              Unchecked="ModifierToggle_Unchecked" />
+                <ToggleButton x:Name="ModAltButton"
+                              Content="{x:Bind svc:Strings.HotkeyModifierAlt}"
+                              Tag="1"
+                              MinWidth="64"
+                              Checked="ModifierToggle_Checked"
+                              Unchecked="ModifierToggle_Unchecked" />
+            </StackPanel>
+
+            <TextBlock Text="{x:Bind svc:Strings.HotkeyKeyLabel}"
+                       FontWeight="SemiBold" />
+            <TextBox x:Name="HotkeyInput"
+                     IsReadOnly="True"
+                     KeyDown="HotkeyInput_KeyDown"
+                     PlaceholderText="{x:Bind svc:Strings.HotkeyInputPlaceholder}"
+                     HorizontalAlignment="Stretch"
+                     FontWeight="SemiBold" />
+
+            <TextBlock x:Name="HotkeyHint"
+                       Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                       TextWrapping="Wrap"
+                       Visibility="Collapsed" />
+        </StackPanel>
 
         <TextBlock Text="{x:Bind svc:Strings.AutoBackupLabel}" FontWeight="SemiBold" />
         <ComboBox x:Name="AutoBackupCombo"
@@ -52,5 +97,6 @@
         <Button Content="{x:Bind svc:Strings.MenuShowTour}"
                 HorizontalAlignment="Left"
                 Click="ShowTourButton_Click" />
-    </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
 </ContentDialog>

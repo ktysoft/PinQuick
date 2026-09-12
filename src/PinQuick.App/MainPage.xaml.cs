@@ -10,6 +10,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.Windows.Storage.Pickers;
+using PinQuick.App.Converters;
 using PinQuick.App.Dialogs;
 using PinQuick.App.Services;
 using PinQuick.App.ViewModels;
@@ -42,11 +43,14 @@ public sealed partial class MainPage : Page
             : Visibility.Collapsed;
     }
 
+    private bool _suppressStartupSearchFlyout;
+
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
         UpdateEmptyState();
         UpdateRecentSectionVisibility();
+        _suppressStartupSearchFlyout = true;
         SearchBox.Focus(FocusState.Programmatic);
         UpdateThemeToggleGlyph();
 
@@ -60,11 +64,7 @@ public sealed partial class MainPage : Page
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(MainViewModel.SelectedPin))
-        {
-            RefreshDetailPanel(ViewModel.SelectedPin);
-        }
-        else if (e.PropertyName == nameof(MainViewModel.RequestedTheme))
+        if (e.PropertyName == nameof(MainViewModel.RequestedTheme))
         {
             (App.Window as MainWindow)?.ApplyTheme(ViewModel.RequestedTheme);
         }
@@ -88,94 +88,12 @@ public sealed partial class MainPage : Page
             : Visibility.Visible;
     }
 
-    private PinItemViewModel? _detailPin;
-
-    private void RefreshDetailPanel(PinItemViewModel? pin)
-    {
-        if (_detailPin is not null)
-        {
-            _detailPin.PropertyChanged -= OnDetailPinPropertyChanged;
-        }
-
-        _detailPin = pin;
-
-        if (pin is null)
-        {
-            DetailPanel.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        pin.PropertyChanged += OnDetailPinPropertyChanged;
-
-        DetailIcon.Glyph = pin.IconGlyph;
-        var hasIcon = pin.HasIconSource;
-        DetailIconThumb.Source = pin.IconSource;
-        DetailIconThumb.Visibility = hasIcon ? Visibility.Visible : Visibility.Collapsed;
-        DetailIcon.Visibility = hasIcon ? Visibility.Collapsed : Visibility.Visible;
-        DetailTitle.Text = pin.Title;
-        DetailTypeDisplay.Text = pin.TypeDisplay;
-        DetailTarget.Text = pin.Target;
-
-        if (!string.IsNullOrEmpty(pin.Description))
-        {
-            DetailDescription.Text = MarkdownFormatter.ToPlainText(pin.Description);
-            DetailDescription.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            DetailDescription.Visibility = Visibility.Collapsed;
-        }
-
-        if (!string.IsNullOrEmpty(pin.Tags))
-        {
-            DetailTags.Text = $"{Loc.T("FieldTags")}: {pin.Tags}";
-            DetailTags.Visibility = Visibility.Visible;
-        }
-        else
-        {
-            DetailTags.Visibility = Visibility.Collapsed;
-        }
-
-        if (pin.LastUsedAt is null)
-        {
-            DetailLastUsed.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            DetailLastUsed.Text = $"{Loc.T("DetailLastUsed")}: {pin.LastUsedAt.Value:g}";
-            DetailLastUsed.Visibility = Visibility.Visible;
-        }
-
-        var canOpenLocation = MainViewModel.CanOpenLocation(pin.Pin);
-        var canRunAsAdmin = MainViewModel.CanRunAsAdmin(pin.Pin);
-        DetailOpenLocationButton.IsEnabled = canOpenLocation;
-        DetailRunAsAdminButton.IsEnabled = canRunAsAdmin;
-
-        DetailPanel.Visibility = Visibility.Visible;
-    }
-
-    private void OnDetailPinPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
-    {
-        if (_detailPin is null)
-        {
-            return;
-        }
-
-        if (e.PropertyName is nameof(PinItemViewModel.IconSource) or nameof(PinItemViewModel.HasIconSource))
-        {
-            DetailIcon.Glyph = _detailPin.IconGlyph;
-            var hasIcon = _detailPin.HasIconSource;
-            DetailIconThumb.Source = _detailPin.IconSource;
-            DetailIconThumb.Visibility = hasIcon ? Visibility.Visible : Visibility.Collapsed;
-            DetailIcon.Visibility = hasIcon ? Visibility.Collapsed : Visibility.Visible;
-        }
-    }
-
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
         var dialog = new SettingsDialog
         {
             XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = ViewModel.RequestedTheme,
         };
 
         var result = await dialog.ShowAsync();
@@ -199,10 +117,20 @@ public sealed partial class MainPage : Page
         settings.Language = dialog.SelectedLanguage;
         settings.MinimizeToTray = dialog.MinimizeToTrayEnabled;
         settings.GlobalHotkeyEnabled = dialog.GlobalHotkeyEnabled;
+        settings.HotkeyModifiers = dialog.HotkeyModifiers;
+        settings.HotkeyKey = dialog.HotkeyKey;
         settings.AutoBackupFrequency = dialog.SelectedAutoBackup;
         settings.Save();
         StartupManager.SetEnabled(dialog.StartupEnabled);
-        (App.Window as MainWindow)?.ApplyNativeSettings();
+
+        var hotkeyApplied = (App.Window as MainWindow)?.ApplyNativeSettings() ?? true;
+        if (!hotkeyApplied)
+        {
+            settings.GlobalHotkeyEnabled = false;
+            settings.Save();
+            (App.Window as MainWindow)?.ApplyNativeSettings();
+            await ShowErrorAsync(Loc.T("HotkeyMsgInUse"));
+        }
 
         if (languageChanged)
         {
@@ -327,16 +255,12 @@ public sealed partial class MainPage : Page
         await OpenPinDialogAsync(null);
     }
 
-    private async void EditButton_Click(object sender, RoutedEventArgs e)
-    {
-        await OpenPinDialogAsync(ViewModel.SelectedPin?.Pin);
-    }
-
     private async Task OpenPinDialogAsync(Pin? existing)
     {
-        var dialog = new PinDialog(existing, ViewModel.Collections.ToList())
+        var dialog = new PinDialog(existing, ViewModel.Collections.Select(c => c.Item).ToList())
         {
             XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = ViewModel.RequestedTheme,
         };
 
         var result = await dialog.ShowAsync();
@@ -356,7 +280,7 @@ public sealed partial class MainPage : Page
 
     private async void NewCollectionButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new CollectionDialog { XamlRoot = RootGrid.XamlRoot };
+        var dialog = new CollectionDialog { XamlRoot = RootGrid.XamlRoot, RequestedTheme = ViewModel.RequestedTheme };
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary && dialog.ResultName is not null)
         {
@@ -364,9 +288,9 @@ public sealed partial class MainPage : Page
         }
     }
 
-    private async void DeleteCollectionButton_Click(object sender, RoutedEventArgs e)
+    private async Task DeleteCollectionAsync(Collection collection)
     {
-        if (ViewModel.SelectedCollection is null)
+        if (collection is null)
         {
             return;
         }
@@ -374,7 +298,7 @@ public sealed partial class MainPage : Page
         var confirm = new ContentDialog
         {
             Title = Loc.T("DeleteCollectionTitle"),
-            Content = $"{string.Format(Loc.T("DeleteCollectionPrompt"), ViewModel.SelectedCollection.Name)} İçindeki pinler korunur.",
+            Content = $"{string.Format(Loc.T("DeleteCollectionPrompt"), collection.Name)} {Loc.T("DeleteCollectionPinsKept")}",
             PrimaryButtonText = Loc.T("SilButton"),
             CloseButtonText = Loc.T("CancelButton"),
             DefaultButton = ContentDialogButton.Close,
@@ -383,40 +307,180 @@ public sealed partial class MainPage : Page
 
         if (await confirm.ShowAsync() == ContentDialogResult.Primary)
         {
-            await ViewModel.DeleteCollectionAsync(ViewModel.SelectedCollection);
+            await ViewModel.DeleteCollectionAsync(collection);
         }
     }
 
-    private async void EditCollectionButton_Click(object sender, RoutedEventArgs e)
+    private async Task EditCollectionAsync(Collection collection)
     {
-        if (ViewModel.SelectedCollection is null)
+        if (collection is null)
         {
             return;
         }
 
-        var dialog = new CollectionDialog(ViewModel.SelectedCollection.Name, ViewModel.SelectedCollection.Color)
+        var dialog = new CollectionDialog(collection.Name, collection.Color)
         {
             XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = ViewModel.RequestedTheme,
         };
 
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary && dialog.ResultName is not null)
         {
-            await ViewModel.UpdateCollectionAsync(ViewModel.SelectedCollection, dialog.ResultName, dialog.ResultColor);
+            await ViewModel.UpdateCollectionAsync(collection, dialog.ResultName, dialog.ResultColor);
         }
     }
 
-    private void LaunchButton_Click(object sender, RoutedEventArgs e)
-        => ViewModel.LaunchCommand.Execute(null);
+    private void CollectionItem_RightTapped(object sender, RightTappedRoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element
+            || element.DataContext is not CollectionItemViewModel wrapper)
+        {
+            return;
+        }
 
-    private void LaunchAdminButton_Click(object sender, RoutedEventArgs e)
-        => ViewModel.LaunchAsAdminCommand.Execute(null);
+        ViewModel.SelectedCollectionItem = wrapper;
 
-    private void FavoriteButton_Click(object sender, RoutedEventArgs e)
-        => ViewModel.ToggleFavoriteCommand.Execute(null);
+        var menu = new MenuFlyout();
 
-    private void OpenLocationButton_Click(object sender, RoutedEventArgs e)
-        => ViewModel.OpenLocationCommand.Execute(null);
+        var rename = new MenuFlyoutItem
+        {
+            Text = Loc.T("ContextRenameCollection"),
+            Icon = new FontIcon { Glyph = "\uE70F" },
+        };
+        rename.Click += (_, _) =>
+        {
+            wrapper.BeginRename();
+            FocusCollectionRenameBox(wrapper);
+        };
+        menu.Items.Add(rename);
+
+        var pickColor = new MenuFlyoutSubItem
+        {
+            Text = Loc.T("ContextPickColor"),
+            Icon = new FontIcon { Glyph = "\uE790" },
+        };
+        foreach (var hex in CollectionDialog.PresetColors)
+        {
+            var color = HexToBrushConverter.ParseHexColor(hex);
+            var colorItem = new ToggleMenuFlyoutItem
+            {
+                Text = hex,
+                IsChecked = string.Equals(wrapper.Color, hex, StringComparison.OrdinalIgnoreCase),
+                Icon = new PathIcon
+                {
+                    Data = new RectangleGeometry { Rect = new Rect(0, 0, 12, 12) },
+                    Width = 12,
+                    Height = 12,
+                    Foreground = new SolidColorBrush(color),
+                },
+            };
+            colorItem.Click += async (_, _) =>
+            {
+                if (!string.Equals(wrapper.Color, hex, StringComparison.OrdinalIgnoreCase))
+                {
+                    await ViewModel.UpdateCollectionAsync(wrapper.Item, wrapper.Name, hex);
+                }
+            };
+            pickColor.Items.Add(colorItem);
+        }
+        menu.Items.Add(pickColor);
+
+        var edit = new MenuFlyoutItem
+        {
+            Text = Loc.T("DetailEdit"),
+            Icon = new FontIcon { Glyph = "\uE713" },
+        };
+        edit.Click += (_, _) => _ = EditCollectionAsync(wrapper.Item);
+        menu.Items.Add(edit);
+
+        var delete = new MenuFlyoutItem
+        {
+            Text = Loc.T("DetailDelete"),
+            Icon = new FontIcon { Glyph = "\uE74D" },
+        };
+        delete.Click += (_, _) => _ = DeleteCollectionAsync(wrapper.Item);
+        menu.Items.Add(delete);
+
+        menu.ShowAt(element, e.GetPosition(element));
+    }
+
+    private void FocusCollectionRenameBox(CollectionItemViewModel wrapper)
+    {
+        if (CollectionsList.ContainerFromItem(wrapper) is ListViewItem container)
+        {
+            FindDescendant<TextBox>(container)?.Focus(FocusState.Programmatic);
+        }
+    }
+
+    private static T? FindDescendant<T>(DependencyObject root)
+        where T : DependencyObject
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is T match)
+            {
+                return match;
+            }
+
+            if (FindDescendant<T>(child) is T nested)
+            {
+                return nested;
+            }
+        }
+
+        return null;
+    }
+
+    private async void CollectionRenameBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (sender is not TextBox box || box.DataContext is not CollectionItemViewModel wrapper)
+        {
+            return;
+        }
+
+        if (e.Key == VirtualKey.Enter)
+        {
+            await CommitCollectionRenameAsync(wrapper);
+        }
+        else if (e.Key == VirtualKey.Escape)
+        {
+            wrapper.EndRename();
+        }
+    }
+
+    private async void CollectionRenameBox_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (sender is TextBox box
+            && box.DataContext is CollectionItemViewModel wrapper
+            && wrapper.IsRenaming)
+        {
+            await CommitCollectionRenameAsync(wrapper);
+        }
+    }
+
+    private async Task CommitCollectionRenameAsync(CollectionItemViewModel wrapper)
+    {
+        var name = wrapper.RenameText.Trim();
+        wrapper.EndRename();
+
+        if (string.IsNullOrEmpty(name) || name == wrapper.Name)
+        {
+            return;
+        }
+
+        await ViewModel.UpdateCollectionAsync(wrapper.Item, name, wrapper.Item.Color);
+    }
+
+    private void CollectionChip_Tapped(object sender, TappedRoutedEventArgs e)
+    {
+        if (sender is FrameworkElement element && element.DataContext is Collection collection)
+        {
+            ViewModel.SelectCollection(collection);
+        }
+    }
 
     private async void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
@@ -444,7 +508,6 @@ public sealed partial class MainPage : Page
         if (await confirm.ShowAsync() == ContentDialogResult.Primary)
         {
             await ViewModel.DeleteSelectedCommand.ExecuteAsync(null);
-            RefreshDetailPanel(null);
         }
     }
 
@@ -547,7 +610,7 @@ public sealed partial class MainPage : Page
         {
             var item = new MenuFlyoutItem { Text = collection.Name };
             var collectionId = collection.Id;
-            item.Click += async (_, _) => await ViewModel.AssignSelectedToCollectionAsync(ids, collectionId);
+            item.Click += async (_, _) => await ViewModel.AddSelectedToCollectionAsync(ids, collectionId);
             flyout.Items.Add(item);
         }
 
@@ -566,22 +629,8 @@ public sealed partial class MainPage : Page
     {
         var count = PinGrid.SelectedItems.Count;
 
-        if (ViewModel.Collections.Count > 0)
-        {
-            var addToCollection = new MenuFlyoutSubItem
-            {
-                Text = Loc.T("ContextAddToCollection"),
-                Icon = new FontIcon { Glyph = "\uE8B7" },
-            };
-            foreach (var collection in ViewModel.Collections)
-            {
-                var collectionItem = new MenuFlyoutItem { Text = collection.Name };
-                collectionItem.Click += async (_, _) => await ViewModel.AssignSelectedToCollectionAsync(
-                    PinGrid.SelectedItems.OfType<PinItemViewModel>().Select(p => p.Id).ToList(), collection.Id);
-                addToCollection.Items.Add(collectionItem);
-            }
-            menu.Items.Add(addToCollection);
-        }
+        var targets = PinGrid.SelectedItems.OfType<PinItemViewModel>().ToList();
+        menu.Items.Add(BuildAddToCollectionSubmenu(targets));
 
         var delete = new MenuFlyoutItem
         {
@@ -617,7 +666,6 @@ public sealed partial class MainPage : Page
 
         var ids = PinGrid.SelectedItems.OfType<PinItemViewModel>().Select(p => p.Id).ToList();
         await ViewModel.DeleteSelectedAsync(ids);
-        RefreshDetailPanel(null);
     }
 
     private void PinCard_RightTapped(object sender, RightTappedRoutedEventArgs e)
@@ -665,22 +713,7 @@ public sealed partial class MainPage : Page
         favorite.Click += async (_, _) => await ViewModel.ToggleFavoriteCommand.ExecuteAsync(null);
         menu.Items.Add(favorite);
 
-        if (ViewModel.Collections.Count > 0)
-        {
-            var addToCollection = new MenuFlyoutSubItem
-            {
-                Text = Loc.T("ContextAddToCollection"),
-                Icon = new FontIcon { Glyph = "\uE8B7" },
-            };
-            foreach (var collection in ViewModel.Collections)
-            {
-                var collectionItem = new MenuFlyoutItem { Text = collection.Name };
-                collectionItem.Click += async (_, _) => await ViewModel.AssignPinToCollectionAsync(item.Pin, collection.Id);
-                addToCollection.Items.Add(collectionItem);
-            }
-
-            menu.Items.Add(addToCollection);
-        }
+        menu.Items.Add(BuildAddToCollectionSubmenu(new[] { item }));
 
         var edit = new MenuFlyoutItem { Text = Loc.T("DetailEdit"), Icon = new FontIcon { Glyph = "\uE70F" } };
         edit.Click += (_, _) => _ = OpenPinDialogAsync(item.Pin);
@@ -691,6 +724,62 @@ public sealed partial class MainPage : Page
         menu.Items.Add(delete);
 
         menu.ShowAt(element, e.GetPosition(element));
+    }
+
+    private MenuFlyoutSubItem BuildAddToCollectionSubmenu(IReadOnlyList<PinItemViewModel> targets)
+    {
+        var submenu = new MenuFlyoutSubItem
+        {
+            Text = Loc.T("ContextAddToCollection"),
+            Icon = new FontIcon { Glyph = "\uE8B7" },
+        };
+
+        var newCollection = new MenuFlyoutItem
+        {
+            Text = Loc.T("ContextNewCollection"),
+            Icon = new FontIcon { Glyph = "\uE710" },
+        };
+        newCollection.Click += async (_, _) => await CreateCollectionAndAddPinsAsync(targets);
+        submenu.Items.Add(newCollection);
+
+        foreach (var collection in ViewModel.Collections)
+        {
+            var allMembers = targets.All(t => t.Pin.CollectionIds.Contains(collection.Id));
+            var collectionItem = new MenuFlyoutItem
+            {
+                Text = collection.Name,
+                IsEnabled = !allMembers,
+                Icon = allMembers ? new FontIcon { Glyph = "\uE73E" } : null,
+            };
+            collectionItem.Click += async (_, _) => await ViewModel.AddSelectedToCollectionAsync(
+                targets.Select(t => t.Id).ToList(), collection.Id);
+            submenu.Items.Add(collectionItem);
+        }
+
+        return submenu;
+    }
+
+    private async Task CreateCollectionAndAddPinsAsync(IReadOnlyList<PinItemViewModel> targets)
+    {
+        var dialog = new CollectionDialog
+        {
+            XamlRoot = RootGrid.XamlRoot,
+            RequestedTheme = ViewModel.RequestedTheme,
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary || dialog.ResultName is null)
+        {
+            return;
+        }
+
+        var collection = await ViewModel.AddCollectionAsync(dialog.ResultName, dialog.ResultColor);
+        if (collection is null)
+        {
+            return;
+        }
+
+        await ViewModel.AddSelectedToCollectionAsync(targets.Select(t => t.Id).ToList(), collection.Id);
     }
 
     private void PinGrid_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
@@ -958,6 +1047,12 @@ public sealed partial class MainPage : Page
 
     private void SearchBox_GotFocus(object sender, RoutedEventArgs e)
     {
+        if (_suppressStartupSearchFlyout)
+        {
+            _suppressStartupSearchFlyout = false;
+            return;
+        }
+
         if (!string.IsNullOrEmpty(ViewModel.SearchQuery))
         {
             return;
@@ -1183,23 +1278,12 @@ public sealed partial class MainPage : Page
 
     private void UpdateThemeToggleGlyph()
     {
-        ThemeToggleIcon.Glyph = AppSettings.Current.Theme switch
-        {
-            "Dark" => "\uE708",
-            "Light" => "\uE771",
-            _ => "\uE770",
-        };
+        ThemeToggleIcon.Glyph = AppSettings.Current.Theme == "Dark" ? "\uE708" : "\uE771";
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
     {
-        var current = AppSettings.Current.Theme;
-        var next = current switch
-        {
-            "Dark" => "Light",
-            "Light" => "Default",
-            _ => "Dark",
-        };
+        var next = AppSettings.Current.Theme == "Dark" ? "Light" : "Dark";
 
         AppSettings.Current.Theme = next;
         AppSettings.Current.Save();
@@ -1242,7 +1326,7 @@ public sealed partial class MainPage : Page
 
         if (pinIds.Count > 0)
         {
-            await ViewModel.AssignSelectedToCollectionAsync(pinIds.Distinct().ToList(), collectionId);
+            await ViewModel.AddSelectedToCollectionAsync(pinIds.Distinct().ToList(), collectionId);
         }
     }
 }

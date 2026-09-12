@@ -7,7 +7,7 @@ namespace PinQuick.Storage.Database;
 /// </summary>
 public sealed class DatabaseInitializer
 {
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;
     private readonly string _connectionString;
 
     public DatabaseInitializer(string connectionString)
@@ -94,16 +94,59 @@ public sealed class DatabaseInitializer
             CREATE INDEX IF NOT EXISTS IX_Pins_CollectionId ON Pins(CollectionId);
             CREATE INDEX IF NOT EXISTS IX_Pins_IsFavorite ON Pins(IsFavorite);
             CREATE INDEX IF NOT EXISTS IX_Pins_Target ON Pins(Target);
+
+            CREATE TABLE IF NOT EXISTS PinCollections (
+                PinId INTEGER NOT NULL,
+                CollectionId INTEGER NOT NULL,
+                PRIMARY KEY (PinId, CollectionId),
+                FOREIGN KEY (PinId) REFERENCES Pins(Id) ON DELETE CASCADE,
+                FOREIGN KEY (CollectionId) REFERENCES Collections(Id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS IX_PinCollections_CollectionId ON PinCollections(CollectionId);
             """;
         command.ExecuteNonQuery();
     }
 
     private static void UpdateSchemaVersion(SqliteConnection connection)
     {
+        var current = GetSchemaVersion(connection);
+        if (current < 2)
+        {
+            MigrateToPinCollections(connection);
+        }
+
         using var command = connection.CreateCommand();
-        command.CommandText = "INSERT OR IGNORE INTO SchemaVersion (Id, Version, AppliedAt) VALUES (1, $version, $appliedAt)";
+        command.CommandText =
+            """
+            INSERT INTO SchemaVersion (Id, Version, AppliedAt) VALUES (1, $version, $appliedAt)
+            ON CONFLICT(Id) DO UPDATE SET Version = excluded.Version, AppliedAt = excluded.AppliedAt;
+            """;
         command.Parameters.AddWithValue("$version", CurrentSchemaVersion);
         command.Parameters.AddWithValue("$appliedAt", DateTime.UtcNow.ToString("o"));
         command.ExecuteNonQuery();
+    }
+
+    /// <summary>
+    /// Eski tek koleksiyon modelindeki (Pins.CollectionId) ilişkileri
+    /// PinCollections birleştirme tablosuna taşır.
+    /// </summary>
+    private static void MigrateToPinCollections(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText =
+            """
+            INSERT INTO PinCollections (PinId, CollectionId)
+            SELECT Id, CollectionId FROM Pins
+            WHERE CollectionId IS NOT NULL;
+            """;
+        command.ExecuteNonQuery();
+    }
+
+    private static int GetSchemaVersion(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COALESCE((SELECT Version FROM SchemaVersion WHERE Id = 1), 0)";
+        return Convert.ToInt32(command.ExecuteScalar());
     }
 }

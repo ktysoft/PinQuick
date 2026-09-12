@@ -16,8 +16,11 @@
     MinWidth="460"
     mc:Ignorable="d">
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="520">
-        <Grid Width="420" RowSpacing="12">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled"
+                  MaxHeight="520"
+                  Padding="0,0,12,4">
+        <Grid MinWidth="420" RowSpacing="12">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />

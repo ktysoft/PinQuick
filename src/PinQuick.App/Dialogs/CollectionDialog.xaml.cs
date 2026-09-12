@@ -14,7 +14,10 @@ public sealed partial class CollectionDialog : ContentDialog
 {
     private const string NoColor = "";
 
-    private static readonly string[] PresetColors =
+    /// <summary>
+    /// Koleksiyonlara önerilen hazır renkler. Sağ tık menüsündeki "Renk Seç" de bunları kullanır.
+    /// </summary>
+    public static readonly string[] PresetColors =
     [
         "#E81123", "#FF8C00", "#FCE100", "#107C10", "#0078D4",
         "#5C2D91", "#E3008C", "#00B294", "#6B69D6", "#767676",

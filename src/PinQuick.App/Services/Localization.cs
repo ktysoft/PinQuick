@@ -39,7 +39,6 @@ public static class Loc
         ["SideCollections"] = "Koleksiyonlar",
         ["SideToggleCollectionsTooltip"] = "Koleksiyonları göster / gizle",
         ["SideNewCollectionTooltip"] = "Yeni koleksiyon",
-        ["SideDeleteCollectionTooltip"] = "Seçili koleksiyonu sil",
         ["SideAbout"] = "Hakkında",
         ["SideAboutTooltip"] = "Uygulama hakkında",
         ["GridReorderTooltip"] = "Ana görünümde kartları sürükleyerek sıralayabilirsin",
@@ -88,6 +87,9 @@ public static class Loc
         ["ContextAddFavorite"] = "Favorilere ekle",
         ["ContextRemoveFavorite"] = "Favorilerden çıkar",
         ["ContextAddToCollection"] = "Koleksiyona Ekle",
+        ["ContextNewCollection"] = "＋ Yeni Koleksiyon Oluştur",
+        ["ContextRenameCollection"] = "Yeniden Adlandır",
+        ["ContextPickColor"] = "Renk Seç",
         ["ContextNoCollection"] = "Koleksiyonsuz",
 
         // Status messages
@@ -119,6 +121,7 @@ public static class Loc
         ["SelBarClear"] = "Seçimi temizle",
         ["DeleteCollectionTitle"] = "Koleksiyonu sil",
         ["DeleteCollectionPrompt"] = "'{0}' koleksiyonu silinsin mi?",
+        ["DeleteCollectionPinsKept"] = "İçindeki pinler korunur.",
         ["SilButton"] = "Sil",
         ["CancelButton"] = "İptal",
 
@@ -167,7 +170,6 @@ public static class Loc
         ["CreateButton"] = "Oluştur",
         ["FieldCollectionName"] = "Koleksiyon adı",
         ["CollectionNamePlaceholder"] = "Geliştirme, Sistem, Kişisel...",
-        ["SideEditCollectionTooltip"] = "Seçili koleksiyonu yeniden adlandır",
         ["FieldCollectionColor"] = "Renk",
         ["NoColorButton"] = "Renksiz",
 
@@ -178,7 +180,6 @@ public static class Loc
         // Settings dialog
         ["SettingsDialogTitle"] = "Ayarlar",
         ["ThemeLabel"] = "Tema",
-        ["ThemeSystem"] = "Sistem",
         ["ThemeDark"] = "Koyu",
         ["ThemeLight"] = "Açık",
         ["LanguageLabel"] = "Dil",
@@ -190,7 +191,15 @@ public static class Loc
         ["CardSizeMedium"] = "Orta",
         ["CardSizeLarge"] = "Büyük",
         ["MinimizeToTrayLabel"] = "Pencere kapatıldığında tepsiye küçült",
-        ["GlobalHotkeyLabel"] = "Global kısayol (Ctrl+Space pencereyi göster/gizle)",
+        ["GlobalHotkeyLabel"] = "Global kısayol (pencereyi göster/gizle)",
+        ["HotkeyModifiersLabel"] = "Değiştirici tuşlar",
+        ["HotkeyKeyLabel"] = "Kısayol tuşu",
+        ["HotkeyModifierCtrl"] = "Ctrl",
+        ["HotkeyModifierShift"] = "Shift",
+        ["HotkeyModifierAlt"] = "Alt",
+        ["HotkeyInputPlaceholder"] = "Yukarıdaki tuşlarla birlikte bir tuşa basın...",
+        ["HotkeyErrorModifierOnly"] = "Yalnızca Ctrl/Shift/Alt kısayol olarak kabul edilmez; en az bir ana tuş seçin.",
+        ["HotkeyMsgInUse"] = "Bu kısayol başka bir program tarafından kullanılıyor veya Windows'a ayrılmış. Global kısayol kapalı bırakıldı; farklı bir kısayol deneyebilirsiniz.",
         ["RestartRequiredMessage"] = "Dil değişikliği için uygulamanın yeniden başlatılması gerekir. Şimdi yeniden başlatılsın mı?",
         ["RestartButton"] = "Yeniden Başlat",
 
@@ -264,7 +273,6 @@ public static class Loc
         ["SideCollections"] = "Collections",
         ["SideToggleCollectionsTooltip"] = "Show / hide collections",
         ["SideNewCollectionTooltip"] = "New collection",
-        ["SideDeleteCollectionTooltip"] = "Delete selected collection",
         ["SideAbout"] = "About",
         ["SideAboutTooltip"] = "About the app",
         ["GridReorderTooltip"] = "Drag cards to reorder in the main view",
@@ -310,6 +318,9 @@ public static class Loc
         ["ContextAddFavorite"] = "Add to favorites",
         ["ContextRemoveFavorite"] = "Remove from favorites",
         ["ContextAddToCollection"] = "Add to collection",
+        ["ContextNewCollection"] = "+ Create New Collection",
+        ["ContextRenameCollection"] = "Rename",
+        ["ContextPickColor"] = "Pick Color",
         ["ContextNoCollection"] = "No collection",
 
         ["MsgNoPinsFound"] = "No pins found.",
@@ -339,6 +350,7 @@ public static class Loc
         ["SelBarClear"] = "Clear selection",
         ["DeleteCollectionTitle"] = "Delete collection",
         ["DeleteCollectionPrompt"] = "Delete collection '{0}'?",
+        ["DeleteCollectionPinsKept"] = "Pins inside will be kept.",
         ["SilButton"] = "Delete",
         ["CancelButton"] = "Cancel",
 
@@ -385,7 +397,6 @@ public static class Loc
         ["CreateButton"] = "Create",
         ["FieldCollectionName"] = "Collection name",
         ["CollectionNamePlaceholder"] = "Development, System, Personal...",
-        ["SideEditCollectionTooltip"] = "Rename selected collection",
         ["FieldCollectionColor"] = "Color",
         ["NoColorButton"] = "No color",
 
@@ -394,7 +405,6 @@ public static class Loc
 
         ["SettingsDialogTitle"] = "Settings",
         ["ThemeLabel"] = "Theme",
-        ["ThemeSystem"] = "System",
         ["ThemeDark"] = "Dark",
         ["ThemeLight"] = "Light",
         ["LanguageLabel"] = "Language",
@@ -406,7 +416,15 @@ public static class Loc
         ["CardSizeMedium"] = "Medium",
         ["CardSizeLarge"] = "Large",
         ["MinimizeToTrayLabel"] = "Minimize to tray when the window is closed",
-        ["GlobalHotkeyLabel"] = "Global hotkey (Ctrl+Space show/hide window)",
+        ["GlobalHotkeyLabel"] = "Global hotkey (show/hide window)",
+        ["HotkeyModifiersLabel"] = "Modifier keys",
+        ["HotkeyKeyLabel"] = "Shortcut key",
+        ["HotkeyModifierCtrl"] = "Ctrl",
+        ["HotkeyModifierShift"] = "Shift",
+        ["HotkeyModifierAlt"] = "Alt",
+        ["HotkeyInputPlaceholder"] = "Press a key together with the modifiers above...",
+        ["HotkeyErrorModifierOnly"] = "Ctrl/Shift/Alt alone is not a valid shortcut; choose at least one main key.",
+        ["HotkeyMsgInUse"] = "This shortcut is already used by another program or reserved by Windows. The global hotkey was left off; you can try a different shortcut.",
         ["RestartRequiredMessage"] = "The app must restart to apply the language change. Restart now?",
         ["RestartButton"] = "Restart",
 
@@ -485,8 +503,6 @@ public static class Strings
     public static string SideCollections => Loc.T("SideCollections");
     public static string SideToggleCollectionsTooltip => Loc.T("SideToggleCollectionsTooltip");
     public static string SideNewCollectionTooltip => Loc.T("SideNewCollectionTooltip");
-    public static string SideDeleteCollectionTooltip => Loc.T("SideDeleteCollectionTooltip");
-    public static string SideEditCollectionTooltip => Loc.T("SideEditCollectionTooltip");
     public static string SideAbout => Loc.T("SideAbout");
     public static string SideAboutTooltip => Loc.T("SideAboutTooltip");
     public static string GridReorderTooltip => Loc.T("GridReorderTooltip");
@@ -541,7 +557,6 @@ public static class Strings
 
     public static string SettingsDialogTitle => Loc.T("SettingsDialogTitle");
     public static string ThemeLabel => Loc.T("ThemeLabel");
-    public static string ThemeSystem => Loc.T("ThemeSystem");
     public static string ThemeDark => Loc.T("ThemeDark");
     public static string ThemeLight => Loc.T("ThemeLight");
     public static string LanguageLabel => Loc.T("LanguageLabel");
@@ -554,6 +569,13 @@ public static class Strings
     public static string CardSizeLarge => Loc.T("CardSizeLarge");
     public static string MinimizeToTrayLabel => Loc.T("MinimizeToTrayLabel");
     public static string GlobalHotkeyLabel => Loc.T("GlobalHotkeyLabel");
+    public static string HotkeyModifiersLabel => Loc.T("HotkeyModifiersLabel");
+    public static string HotkeyKeyLabel => Loc.T("HotkeyKeyLabel");
+    public static string HotkeyModifierCtrl => Loc.T("HotkeyModifierCtrl");
+    public static string HotkeyModifierShift => Loc.T("HotkeyModifierShift");
+    public static string HotkeyModifierAlt => Loc.T("HotkeyModifierAlt");
+    public static string HotkeyInputPlaceholder => Loc.T("HotkeyInputPlaceholder");
+    public static string HotkeyErrorModifierOnly => Loc.T("HotkeyErrorModifierOnly");
     public static string RestartButton => Loc.T("RestartButton");
 
     public static string CloseButton => Loc.T("CloseButton");

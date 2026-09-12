@@ -108,4 +108,79 @@ public sealed class PinManagerTests : DatabaseTestBase
         var pins = await PinManager.GetAllAsync();
         Assert.Equal(new[] { "C", "A", "B" }, pins.Select(p => p.Title));
     }
+
+    [Fact]
+    public async Task AddToCollectionAsync_AssignsPinToCollection()
+    {
+        var collectionId = await CollectionManager.AddAsync(new Collection { Name = "İş" });
+        var pinId = await PinManager.AddAsync(CreatePin());
+
+        await PinManager.AddToCollectionAsync(pinId, collectionId);
+
+        var pin = await PinManager.GetByIdAsync(pinId);
+        Assert.NotNull(pin);
+        Assert.Contains(collectionId, pin!.CollectionIds);
+    }
+
+    [Fact]
+    public async Task AddToCollectionAsync_IsIdempotent()
+    {
+        var collectionId = await CollectionManager.AddAsync(new Collection { Name = "İş" });
+        var pinId = await PinManager.AddAsync(CreatePin());
+
+        await PinManager.AddToCollectionAsync(pinId, collectionId);
+        await PinManager.AddToCollectionAsync(pinId, collectionId);
+
+        var pin = await PinManager.GetByIdAsync(pinId);
+        Assert.NotNull(pin);
+        Assert.Single(pin!.CollectionIds);
+    }
+
+    [Fact]
+    public async Task Pin_CanBelongToMultipleCollections()
+    {
+        var workId = await CollectionManager.AddAsync(new Collection { Name = "İş" });
+        var personalId = await CollectionManager.AddAsync(new Collection { Name = "Kişisel" });
+        var pinId = await PinManager.AddAsync(CreatePin());
+
+        await PinManager.AddToCollectionAsync(pinId, workId);
+        await PinManager.AddToCollectionAsync(pinId, personalId);
+
+        var pin = await PinManager.GetByIdAsync(pinId);
+        Assert.NotNull(pin);
+        Assert.Equal(2, pin!.CollectionIds.Count);
+        Assert.Contains(workId, pin.CollectionIds);
+        Assert.Contains(personalId, pin.CollectionIds);
+    }
+
+    [Fact]
+    public async Task ClearCollectionAsync_RemovesOnlyThatMembership()
+    {
+        var workId = await CollectionManager.AddAsync(new Collection { Name = "İş" });
+        var personalId = await CollectionManager.AddAsync(new Collection { Name = "Kişisel" });
+        var pinId = await PinManager.AddAsync(CreatePin());
+        await PinManager.AddToCollectionAsync(pinId, workId);
+        await PinManager.AddToCollectionAsync(pinId, personalId);
+
+        await PinManager.ClearCollectionAsync(workId);
+
+        var pin = await PinManager.GetByIdAsync(pinId);
+        Assert.NotNull(pin);
+        Assert.DoesNotContain(workId, pin!.CollectionIds);
+        Assert.Contains(personalId, pin.CollectionIds);
+    }
+
+    [Fact]
+    public async Task AddAsync_WithInitialCollectionIds_PersistsMembership()
+    {
+        var workId = await CollectionManager.AddAsync(new Collection { Name = "İş" });
+        var pin = CreatePin();
+        pin.CollectionIds.Add(workId);
+
+        var pinId = await PinManager.AddAsync(pin);
+
+        var loaded = await PinManager.GetByIdAsync(pinId);
+        Assert.NotNull(loaded);
+        Assert.Contains(workId, loaded!.CollectionIds);
+    }
 }

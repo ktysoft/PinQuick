@@ -16,6 +16,7 @@ public sealed class Pin
     public string WorkingDirectory { get; set; } = string.Empty;
     public string Icon { get; set; } = string.Empty;
     public long? CollectionId { get; set; }
+    public List<long> CollectionIds { get; } = new();
     public bool IsFavorite { get; set; }
     public bool IsEnabled { get; set; } = true;
     public DateTime CreatedAt { get; set; }

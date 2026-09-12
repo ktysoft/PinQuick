@@ -26,6 +26,41 @@ public sealed partial class SidebarFilterItemViewModel : ObservableObject
 }
 
 /// <summary>
+/// Sol menüdeki bir koleksiyon satırının sarmalayıcısı. Yerinde yeniden adlandırma
+/// (inline rename) durumunu koleksiyon modeline dokunmadan taşır.
+/// </summary>
+public sealed partial class CollectionItemViewModel : ObservableObject
+{
+    public Collection Item { get; }
+
+    public long Id => Item.Id;
+
+    public string Name => Item.Name;
+
+    public string Color => Item.Color;
+
+    [ObservableProperty]
+    public partial string RenameText { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsRenaming { get; set; }
+
+    public CollectionItemViewModel(Collection collection)
+    {
+        Item = collection ?? throw new ArgumentNullException(nameof(collection));
+        RenameText = collection.Name;
+    }
+
+    public void BeginRename()
+    {
+        RenameText = Item.Name;
+        IsRenaming = true;
+    }
+
+    public void EndRename() => IsRenaming = false;
+}
+
+/// <summary>
 /// Ana sayfanın ViewModel'i: pin listesi, filtreleme, arama ve pin işlemleri.
 /// </summary>
 public sealed partial class MainViewModel : ObservableObject
@@ -51,7 +86,10 @@ public sealed partial class MainViewModel : ObservableObject
     public partial ObservableCollection<PinItemViewModel> Pins { get; set; } = new();
 
     [ObservableProperty]
-    public partial ObservableCollection<Collection> Collections { get; set; } = new();
+    public partial ObservableCollection<CollectionItemViewModel> Collections { get; set; } = new();
+
+    [ObservableProperty]
+    public partial CollectionItemViewModel? SelectedCollectionItem { get; set; }
 
     [ObservableProperty]
     public partial Collection? SelectedCollection { get; set; }
@@ -136,6 +174,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         SelectedCollection = null;
+        SelectedCollectionItem = null;
         if (value.Filter != CurrentFilter)
         {
             CurrentFilter = value.Filter;
@@ -143,6 +182,16 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     partial void OnSelectedCollectionChanged(Collection? value) => ApplyFilter();
+
+    partial void OnSelectedCollectionItemChanged(CollectionItemViewModel? value)
+    {
+        if (SelectedCollection?.Id == value?.Item.Id)
+        {
+            return;
+        }
+
+        SelectedCollection = value?.Item;
+    }
 
     partial void OnSelectedRecentPinChanged(PinItemViewModel? value)
     {
@@ -154,6 +203,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (SelectedCollection is not null)
         {
             SelectedCollection = null;
+            SelectedCollectionItem = null;
         }
 
         if (CurrentFilter != PinFilter.All)
@@ -185,10 +235,16 @@ public sealed partial class MainViewModel : ObservableObject
     private async Task LoadCollectionsAsync()
     {
         var collections = await _collectionManager.GetAllAsync();
+        var selectedId = SelectedCollection?.Id;
         Collections.Clear();
         foreach (var collection in collections)
         {
-            Collections.Add(collection);
+            var wrapper = new CollectionItemViewModel(collection);
+            Collections.Add(wrapper);
+            if (selectedId is long id && wrapper.Id == id)
+            {
+                SelectedCollectionItem = wrapper;
+            }
         }
     }
 
@@ -202,7 +258,7 @@ public sealed partial class MainViewModel : ObservableObject
         var query = SearchQuery?.Trim() ?? string.Empty;
         var pinned = _allPins
             .Where(pin => PinFilterMapping.Matches(pin, CurrentFilter))
-            .Where(pin => SelectedCollection is null || pin.CollectionId == SelectedCollection.Id);
+            .Where(pin => SelectedCollection is null || pin.CollectionIds.Contains(SelectedCollection.Id));
 
         if (!string.IsNullOrEmpty(query))
         {
@@ -224,15 +280,12 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         Pins.Clear();
-        var collectionMap = Collections.ToDictionary(c => c.Id);
+        var collectionMap = Collections.ToDictionary(c => c.Id, c => c.Item);
         foreach (var pin in sorted)
         {
             var item = new PinItemViewModel(pin);
             item.ToggleFavoriteRequested = OnToggleFavoriteRequested;
-            if (pin.CollectionId is long collectionId && collectionMap.TryGetValue(collectionId, out var collection))
-            {
-                item.SetCollection(collection);
-            }
+            item.SetCollections(collectionMap, pin.CollectionIds);
 
             Pins.Add(item);
         }
@@ -500,6 +553,10 @@ public sealed partial class MainViewModel : ObservableObject
             else
             {
                 await _pinManager.UpdateAsync(pin);
+                foreach (var collectionId in pin.CollectionIds.Distinct())
+                {
+                    await _pinManager.AddToCollectionAsync(pin.Id, collectionId);
+                }
             }
 
             await LoadAsync();
@@ -556,11 +613,11 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    public async Task AddCollectionAsync(string name, string? color = null)
+    public async Task<Collection?> AddCollectionAsync(string name, string? color = null)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
-            return;
+            return null;
         }
 
         var existing = await _collectionManager.GetAllAsync();
@@ -568,11 +625,13 @@ public sealed partial class MainViewModel : ObservableObject
                 string.Equals(collection.Name.Trim(), name.Trim(), StringComparison.CurrentCultureIgnoreCase)))
         {
             StatusMessage = Loc.T("MsgCollectionExists");
-            return;
+            return null;
         }
 
-        await _collectionManager.AddAsync(new Collection { Name = name.Trim(), Color = string.IsNullOrWhiteSpace(color) ? string.Empty : color.Trim() });
+        var collection = new Collection { Name = name.Trim(), Color = string.IsNullOrWhiteSpace(color) ? string.Empty : color.Trim() };
+        var id = await _collectionManager.AddAsync(collection);
         await LoadCollectionsAsync();
+        return Collections.FirstOrDefault(c => c.Id == id)?.Item;
     }
 
     public async Task UpdateCollectionAsync(Collection collection, string newName, string? color = null)
@@ -597,38 +656,71 @@ public sealed partial class MainViewModel : ObservableObject
         await _collectionManager.UpdateAsync(collection);
         await LoadCollectionsAsync();
         SelectedCollection = selectedId is long id
-            ? Collections.FirstOrDefault(c => c.Id == id)
+            ? Collections.FirstOrDefault(c => c.Id == id)?.Item
             : null;
         ApplyFilter();
     }
 
-    public async Task AssignPinToCollectionAsync(Pin pin, long? collectionId)
+    /// <summary>
+    /// Kart üzerindeki bir koleksiyon rozetine tıklanınca ilgili koleksiyona geçer.
+    /// </summary>
+    public void SelectCollection(Collection collection)
     {
-        if (pin is null)
+        if (collection is null)
         {
             return;
         }
 
-        pin.CollectionId = collectionId;
-        await _pinManager.UpdateAsync(pin);
+        SelectedCollectionItem = Collections.FirstOrDefault(c => c.Id == collection.Id);
+        if (SelectedCollectionItem is not null && SelectedCollection?.Id != collection.Id)
+        {
+            SelectedCollection = collection;
+        }
+    }
+
+    /// <summary>
+/// Bir pini koleksiyona ekler (üyelik). Pin zaten üyeyse tekrar eklenmez.
+/// </summary>
+public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
+    {
+        if (pin is null || collectionId <= 0 || pin.Id == 0 || pin.CollectionIds.Contains(collectionId))
+        {
+            return;
+        }
+
+        await _pinManager.AddToCollectionAsync(pin.Id, collectionId);
+        pin.CollectionIds.Add(collectionId);
         ApplyFilter();
     }
 
-    public async Task AssignSelectedToCollectionAsync(IReadOnlyList<long> ids, long? collectionId)
+    /// <summary>
+    /// Birden çok pini bir koleksiyona ekler. Zaten üye olan pinler atlanır.
+    /// </summary>
+    public async Task AddSelectedToCollectionAsync(IReadOnlyList<long> ids, long collectionId)
     {
-        if (ids is null || ids.Count == 0 || _allPins is null)
+        if (ids is null || ids.Count == 0 || collectionId <= 0 || _allPins is null)
         {
             return;
         }
 
         var idSet = ids.ToHashSet();
+        var changed = false;
         foreach (var pin in _allPins.Where(p => idSet.Contains(p.Id)))
         {
-            pin.CollectionId = collectionId;
-            await _pinManager.UpdateAsync(pin);
+            if (pin.CollectionIds.Contains(collectionId))
+            {
+                continue;
+            }
+
+            await _pinManager.AddToCollectionAsync(pin.Id, collectionId);
+            pin.CollectionIds.Add(collectionId);
+            changed = true;
         }
 
-        ApplyFilter();
+        if (changed)
+        {
+            ApplyFilter();
+        }
     }
 
     public async Task DeleteSelectedAsync(IReadOnlyList<long> ids)
@@ -661,6 +753,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (SelectedCollection?.Id == collection.Id)
         {
             SelectedCollection = null;
+            SelectedCollectionItem = null;
         }
 
         await LoadAsync();
@@ -722,7 +815,7 @@ public sealed partial class MainViewModel : ObservableObject
 
         if (collection is not null && collection.Id != 0)
         {
-            selected = selected.Where(pin => pin.CollectionId == collection.Id);
+            selected = selected.Where(pin => pin.CollectionIds.Contains(collection.Id));
         }
 
         var list = selected.ToList();
