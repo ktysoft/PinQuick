@@ -15,7 +15,9 @@ using PinQuick.App.Dialogs;
 using PinQuick.App.Services;
 using PinQuick.App.ViewModels;
 using PinQuick.Core.Models;
+using PinQuick.Core.Security;
 using PinQuick.Core.Services;
+using PinQuick.Windows;
 
 namespace PinQuick.App;
 
@@ -31,16 +33,8 @@ public sealed partial class MainPage : Page
         ViewModel = new MainViewModel(App.Services.PinManager, App.Services.CollectionManager, App.Services.ProcessLauncher);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         ViewModel.Pins.CollectionChanged += (_, _) => UpdateEmptyState();
-        ViewModel.RecentPins.CollectionChanged += (_, _) => UpdateRecentSectionVisibility();
         ViewModel.Collections.CollectionChanged += (_, _) => UpdateSelectionBar();
         Loaded += OnLoaded;
-    }
-
-    private void UpdateRecentSectionVisibility()
-    {
-        RecentSection.Visibility = ViewModel.RecentPins.Count > 0
-            ? Visibility.Visible
-            : Visibility.Collapsed;
     }
 
     private bool _suppressStartupSearchFlyout;
@@ -49,7 +43,6 @@ public sealed partial class MainPage : Page
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
         UpdateEmptyState();
-        UpdateRecentSectionVisibility();
         _suppressStartupSearchFlyout = true;
         SearchBox.Focus(FocusState.Programmatic);
         UpdateThemeToggleGlyph();
@@ -184,16 +177,65 @@ public sealed partial class MainPage : Page
                         var extension = Path.GetExtension(file.Path).ToLowerInvariant();
                         var type = extension switch
                         {
-                            ".exe" or ".lnk" => PinType.Application,
+                            ".exe" => PinType.Application,
                             ".bat" or ".cmd" => PinType.Batch,
                             ".ps1" => PinType.PowerShell,
                             _ => PinType.File,
                         };
+                        var target = file.Path;
+                        var arguments = string.Empty;
+                        var icon = string.Empty;
+
+                        // Kısayollar (.lnk/.url) kısayol dosyasının kendisi yerine
+                        // işaret ettiği gerçek hedefle eklenir; böylece masaüstündeki
+                        // kısayol silinse bile pin hedefe bağlı kalır.
+                        if (extension is ".lnk" or ".url")
+                        {
+                            var shortcut = ShortcutResolver.ResolveShortcut(file.Path);
+                            if (shortcut is not null)
+                            {
+                                if (Directory.Exists(shortcut.Target))
+                                {
+                                    type = PinType.Folder;
+                                    target = shortcut.Target;
+                                }
+                                else if (File.Exists(shortcut.Target))
+                                {
+                                    target = shortcut.Target;
+                                    arguments = shortcut.Arguments;
+                                    var resolvedExtension = Path.GetExtension(shortcut.Target).ToLowerInvariant();
+                                    type = resolvedExtension switch
+                                    {
+                                        ".exe" => PinType.Application,
+                                        ".bat" or ".cmd" => PinType.Batch,
+                                        ".ps1" => PinType.PowerShell,
+                                        _ => PinType.File,
+                                    };
+                                }
+                                else if (Uri.TryCreate(shortcut.Target, UriKind.Absolute, out var urlUri)
+                                         && !string.IsNullOrEmpty(urlUri.Scheme))
+                                {
+                                    // steam://, com.epicgames.launcher:// vb. oyun/program başlatıcıları
+                                    // Web sitesi değil, bir uygulama başlatıcısıdır.
+                                    type = ShortcutResolver.IsAppLauncherScheme(urlUri.Scheme)
+                                        ? PinType.Application
+                                        : PinType.Website;
+                                    target = shortcut.Target;
+
+                                    // .url içindeki IconFile'ı koru; steam://, com.epicgames.launcher:// gibi
+                                    // hedeflerde kart ikonu hedeften çıkarılamayacağı için bu gerekli.
+                                    icon = ShortcutResolver.ResolveIconSource(file.Path) ?? string.Empty;
+                                }
+                            }
+                        }
+
                         pins.Add(new Pin
                         {
                             Title = Path.GetFileNameWithoutExtension(file.Path),
                             Type = type,
-                            Target = file.Path,
+                            Target = target,
+                            Arguments = arguments,
+                            Icon = icon,
                         });
                         break;
                     }
@@ -1090,6 +1132,11 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        if (_searchHistoryFlyoutOpen)
+        {
+            return;
+        }
+
         var history = AppSettings.Current.SearchHistory;
         if (history.Count == 0)
         {
@@ -1118,7 +1165,6 @@ public sealed partial class MainPage : Page
             {
                 ViewModel.SearchQuery = query;
                 SearchBox.Text = query;
-                FlyoutBase.ShowAttachedFlyout(SearchBox);
                 FlyoutBase.GetAttachedFlyout(SearchBox)?.Hide();
             };
             panel.Children.Add(item);
@@ -1139,9 +1185,24 @@ public sealed partial class MainPage : Page
         };
         panel.Children.Add(clear);
 
-        FlyoutBase.SetAttachedFlyout(SearchBox, new Flyout { Content = panel });
+        var flyout = new Flyout { Content = panel };
+        FlyoutBase.SetAttachedFlyout(SearchBox, flyout);
+        _searchHistoryFlyoutOpen = true;
+        flyout.Closed += (_, _) => _searchHistoryFlyoutOpen = false;
         FlyoutBase.ShowAttachedFlyout(SearchBox);
+
+        // Flyout odaklandığında yazılan tuş vuruşları TextBox'a değil flyout'a gidebilir;
+        // odağı hemen kutuya geri vererek arama yazımının engellenmemesini sağla.
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (SearchBox.FocusState == FocusState.Unfocused)
+            {
+                SearchBox.Focus(FocusState.Programmatic);
+            }
+        });
     }
+
+    private bool _searchHistoryFlyoutOpen;
 
     private void EscapeAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {

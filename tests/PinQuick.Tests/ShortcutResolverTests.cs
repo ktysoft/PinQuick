@@ -120,7 +120,146 @@ public sealed class ShortcutResolverTests
         }
     }
 
-    private static void CreateShortcut(string lnkPath, string targetPath, string? iconLocation)
+    [Fact]
+    public void ResolveShortcut_NonShortcut_ReturnsNull()
+    {
+        var exePath = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+        Assert.True(File.Exists(exePath));
+        Assert.Null(ShortcutResolver.ResolveShortcut(exePath));
+    }
+
+    [Fact]
+    public void ResolveShortcut_MissingShortcut_ReturnsNull()
+    {
+        var missing = Path.Combine(Path.GetTempPath(), $"pinquick-missing-{Guid.NewGuid():N}.lnk");
+        Assert.Null(ShortcutResolver.ResolveShortcut(missing));
+    }
+
+    [Fact]
+    public void ResolveShortcut_LnkToExecutable_ReturnsTargetPath()
+    {
+        var target = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+        var lnkPath = Path.Combine(Path.GetTempPath(), $"pinquick-{Guid.NewGuid():N}.lnk");
+        try
+        {
+            CreateShortcut(lnkPath, target, iconLocation: null);
+            var shortcut = ShortcutResolver.ResolveShortcut(lnkPath);
+            Assert.NotNull(shortcut);
+            Assert.Equal(target, shortcut.Target, ignoreCase: true);
+            Assert.Equal(string.Empty, shortcut.Arguments);
+        }
+        finally
+        {
+            File.Delete(lnkPath);
+        }
+    }
+
+    [Fact]
+    public void ResolveShortcut_LnkWithArguments_ReturnsArguments()
+    {
+        var target = Path.Combine(Environment.SystemDirectory, "cmd.exe");
+        var lnkPath = Path.Combine(Path.GetTempPath(), $"pinquick-{Guid.NewGuid():N}.lnk");
+        const string arguments = "/k ver";
+        try
+        {
+            CreateShortcut(lnkPath, target, iconLocation: null, arguments);
+            var shortcut = ShortcutResolver.ResolveShortcut(lnkPath);
+            Assert.NotNull(shortcut);
+            Assert.Equal(target, shortcut.Target, ignoreCase: true);
+            Assert.Equal(arguments, shortcut.Arguments);
+        }
+        finally
+        {
+            File.Delete(lnkPath);
+        }
+    }
+
+    [Fact]
+    public void ResolveShortcut_LnkToFolder_ReturnsFolderTarget()
+    {
+        var folder = Directory.CreateTempSubdirectory("pinquick-shortcut-");
+        var lnkPath = Path.Combine(Path.GetTempPath(), $"pinquick-{Guid.NewGuid():N}.lnk");
+        try
+        {
+            CreateShortcut(lnkPath, folder.FullName, iconLocation: null);
+            var shortcut = ShortcutResolver.ResolveShortcut(lnkPath);
+            Assert.NotNull(shortcut);
+            Assert.Equal(folder.FullName, shortcut.Target, ignoreCase: true);
+        }
+        finally
+        {
+            File.Delete(lnkPath);
+            try
+            {
+                Directory.Delete(folder.FullName, recursive: true);
+            }
+            catch
+            {
+            }
+        }
+    }
+
+    [Fact]
+    public void ResolveShortcut_Url_ReturnsUrlTarget()
+    {
+        var urlPath = Path.Combine(Path.GetTempPath(), $"pinquick-{Guid.NewGuid():N}.url");
+        try
+        {
+            File.WriteAllText(urlPath, "[InternetShortcut]\r\nURL=https://example.com\r\n");
+            var shortcut = ShortcutResolver.ResolveShortcut(urlPath);
+            Assert.NotNull(shortcut);
+            Assert.Equal("https://example.com", shortcut.Target);
+            Assert.Equal(string.Empty, shortcut.Arguments);
+        }
+        finally
+        {
+            File.Delete(urlPath);
+        }
+    }
+
+    [Fact]
+    public void ResolveShortcut_UrlToLocalFile_ReturnsLocalPath()
+    {
+        var target = Path.Combine(Path.GetTempPath(), $"pinquick-app-{Guid.NewGuid():N}.exe");
+        File.WriteAllText(target, string.Empty);
+        var urlPath = Path.Combine(Path.GetTempPath(), $"pinquick-{Guid.NewGuid():N}.url");
+        try
+        {
+            File.WriteAllText(urlPath, $"[InternetShortcut]\r\nURL={new Uri(target).AbsoluteUri}\r\n");
+            var shortcut = ShortcutResolver.ResolveShortcut(urlPath);
+            Assert.NotNull(shortcut);
+            Assert.Equal(target, shortcut.Target, ignoreCase: true);
+            Assert.Equal(string.Empty, shortcut.Arguments);
+        }
+        finally
+        {
+            File.Delete(urlPath);
+            File.Delete(target);
+        }
+    }
+
+    [Fact]
+    public void IsAppLauncherScheme_CommonLaunchers_ReturnsTrue()
+    {
+        Assert.True(ShortcutResolver.IsAppLauncherScheme("steam"));
+        Assert.True(ShortcutResolver.IsAppLauncherScheme("com.epicgames.launcher"));
+        Assert.True(ShortcutResolver.IsAppLauncherScheme("battlenet"));
+        Assert.True(ShortcutResolver.IsAppLauncherScheme("xboxlauncher"));
+        Assert.True(ShortcutResolver.IsAppLauncherScheme("origin"));
+        Assert.True(ShortcutResolver.IsAppLauncherScheme("uplay"));
+    }
+
+    [Fact]
+    public void IsAppLauncherScheme_WebAndOtherSchemes_ReturnsFalse()
+    {
+        Assert.False(ShortcutResolver.IsAppLauncherScheme("https"));
+        Assert.False(ShortcutResolver.IsAppLauncherScheme("http"));
+        Assert.False(ShortcutResolver.IsAppLauncherScheme("mailto"));
+        Assert.False(ShortcutResolver.IsAppLauncherScheme("file"));
+        Assert.False(ShortcutResolver.IsAppLauncherScheme(""));
+    }
+
+    private static void CreateShortcut(string lnkPath, string targetPath, string? iconLocation, string? arguments = null)
     {
         var shellType = Type.GetTypeFromProgID("WScript.Shell")
             ?? throw new InvalidOperationException("WScript.Shell bulunamadı.");
@@ -132,6 +271,11 @@ public sealed class ShortcutResolverTests
         if (iconLocation is not null)
         {
             shortcut.IconLocation = $"{iconLocation},0";
+        }
+
+        if (arguments is not null)
+        {
+            shortcut.Arguments = arguments;
         }
 
         shortcut.Save();

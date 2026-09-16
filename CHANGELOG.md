@@ -3,6 +3,38 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [1.1.0] - 2026-09-16
+
+### Geliştirmeler
+
+- Pin oluşturma/düzenleme penceresinde "Hedef" alanı Gözat ile seçilebiliyor;
+  dosya seçici tüm dosyaları gösteriyor ve PowerShell (.ps1) / Sistem Aracı (.msc,
+  .exe) türleri için de gözat butonu görünüyor.
+- Çoklu seçim araç çubuğu opak bir zemin üzerine yeniden tasarlandı: öne çıkan
+  (vurgulu) "Koleksiyona ekle", kırmızı "Sil" ve sade "Seçimi temizle" butonlarıyla
+  artık kartların üzerinde net ve tıklanabilir görünüyor.
+- Pin oluşturma/düzenleme penceresindeki "Tür" listesi artık seçili dilde görünüyor
+  (Türkçe: Uygulama, Klasör...; İngilizce: Application, Folder...).
+
+### Düzeltildi
+
+- Steam tarafından oluşturulan .url kısayollarının içindeki steam://rungameid/...
+  hedefleri artık uygulama kategorisinde ekleniyor, bozuk sayılmıyor ve tıklayınca
+  Steam üzerinden başlatılabiliyor.
+- Epic Games (com.epicgames.launcher://), Battle.net (battlenet://), Xbox (xboxlauncher://),
+  Origin (origin://) ve Uplay (uplay://) gibi masaüstü oyun başlatıcılarının .url
+  kısayolları da artık uygulama kategorisinde ekleniyor; hedef bir web sitesi sayılmıyor.
+- Steam masaüstü .url kısayollarından eklenen pinlerin kart ikonu artık gösteriliyor
+  (kısayoldaki IconFile bilgisi pin'e aktarılıyor).
+- Yan panelde Koleksiyonlar'ın hemen üzerinde beliren "Son Kullanılanlar" bölümü
+  kaldırıldı.
+- .url hedefleri file:/// gibi URI ise gerçek yerel dosya/klasör yoluna çevriliyor;
+  uygulama hedefleri kısayolun gerçek kaynağına bağlanıyor.
+- Masaüstü veya başka bir konumdan bırakılan kısayollar (.lnk / .url) artık kısayol
+  dosyasının kendisi yerine işaret ettiği gerçek hedefle ekleniyor (uygulama, klasör
+  veya URL). Böylece masaüstündeki kısayol silinse bile pin bozulmuyor; kısayolda
+  saklı komut satırı argümanları da korunuyor.
+
 ## [1.0.0] - 2026-09-16
 
 ### Eklendi

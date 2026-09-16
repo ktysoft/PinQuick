@@ -98,12 +98,6 @@ public sealed partial class MainViewModel : ObservableObject
     public partial PinItemViewModel? SelectedPin { get; set; }
 
     [ObservableProperty]
-    public partial ObservableCollection<PinItemViewModel> RecentPins { get; set; } = new();
-
-    [ObservableProperty]
-    public partial PinItemViewModel? SelectedRecentPin { get; set; }
-
-    [ObservableProperty]
     public partial ElementTheme RequestedTheme { get; set; } = ElementTheme.Default;
 
     [ObservableProperty]
@@ -193,27 +187,6 @@ public sealed partial class MainViewModel : ObservableObject
         SelectedCollection = value?.Item;
     }
 
-    partial void OnSelectedRecentPinChanged(PinItemViewModel? value)
-    {
-        if (value is null)
-        {
-            return;
-        }
-
-        if (SelectedCollection is not null)
-        {
-            SelectedCollection = null;
-            SelectedCollectionItem = null;
-        }
-
-        if (CurrentFilter != PinFilter.All)
-        {
-            CurrentFilter = PinFilter.All;
-        }
-
-        SelectedPin = value;
-    }
-
     [RelayCommand]
     private async Task LoadAsync()
     {
@@ -224,7 +197,6 @@ public sealed partial class MainViewModel : ObservableObject
             var pins = await _pinManager.GetAllAsync();
             _allPins = pins.ToList();
             ApplyFilter();
-            RefreshRecentPins();
         }
         finally
         {
@@ -291,25 +263,6 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         StatusMessage = Pins.Count == 0 && _allPins.Count > 0 ? Loc.T("MsgNoPinsFound") : string.Empty;
-    }
-
-    private void RefreshRecentPins()
-    {
-        RecentPins.Clear();
-
-        if (_allPins is null)
-        {
-            return;
-        }
-
-        const int maxRecent = 5;
-        foreach (var pin in _allPins
-                     .Where(p => p.LastUsedAt.HasValue)
-                     .OrderByDescending(p => p.LastUsedAt)
-                     .Take(maxRecent))
-        {
-            RecentPins.Add(new PinItemViewModel(pin));
-        }
     }
 
     private async void OnToggleFavoriteRequested(PinItemViewModel item)
@@ -421,7 +374,6 @@ public sealed partial class MainViewModel : ObservableObject
         pin.UseCount++;
         await PersistPinAsync(pin);
         StatusMessage = string.Empty;
-        RefreshRecentPins();
 
         if (CurrentFilter == PinFilter.Recent)
         {

@@ -17,12 +17,18 @@ public sealed partial class PinDialog : ContentDialog
 
     private readonly IReadOnlyList<Collection> _collections;
 
+    private sealed record TypeOption(PinType Type, string Display);
+
+    private readonly List<TypeOption> _typeOptions = Enum.GetValues<PinType>()
+        .Select(t => new TypeOption(t, PinItemViewModel.GetTypeDisplay(t)))
+        .ToList();
+
     public PinDialog(Pin? existing, IReadOnlyList<Collection> collections)
     {
         InitializeComponent();
         _collections = collections;
 
-        TypeCombo.ItemsSource = Enum.GetValues<PinType>();
+        TypeCombo.ItemsSource = _typeOptions;
         CollectionCombo.ItemsSource = _collections;
         CollectionCombo.DisplayMemberPath = nameof(Collection.Name);
         IconGrid.ItemsSource = GlyphOptions.All;
@@ -30,13 +36,13 @@ public sealed partial class PinDialog : ContentDialog
         if (existing is null)
         {
             Title = Loc.T("NewPinDialogTitle");
-            TypeCombo.SelectedItem = PinType.Application;
+            TypeCombo.SelectedItem = _typeOptions.First(o => o.Type == PinType.Application);
         }
         else
         {
             Title = Loc.T("EditPinDialogTitle");
             TitleBox.Text = existing.Title;
-            TypeCombo.SelectedItem = existing.Type;
+            TypeCombo.SelectedItem = _typeOptions.First(o => o.Type == existing.Type);
             TargetBox.Text = existing.Target;
             ArgumentsBox.Text = existing.Arguments;
             WorkingDirectoryBox.Text = existing.WorkingDirectory;
@@ -60,10 +66,12 @@ public sealed partial class PinDialog : ContentDialog
 
     private void TypeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (TypeCombo.SelectedItem is not PinType type)
+        if (TypeCombo.SelectedItem is not TypeOption option)
         {
             return;
         }
+
+        var type = option.Type;
 
         TargetBox.Header = type switch
         {
@@ -77,16 +85,19 @@ public sealed partial class PinDialog : ContentDialog
 
         BrowseButton.Visibility = type is PinType.Application or PinType.File
             or PinType.Folder or PinType.NetworkPath or PinType.Batch
+            or PinType.PowerShell or PinType.SystemTool
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
 
     private async void BrowseButton_Click(object sender, RoutedEventArgs e)
     {
-        if (TypeCombo.SelectedItem is not PinType type)
+        if (TypeCombo.SelectedItem is not TypeOption option)
         {
             return;
         }
+
+        var type = option.Type;
 
         if (type is PinType.Folder or PinType.NetworkPath)
         {
@@ -108,10 +119,22 @@ public sealed partial class PinDialog : ContentDialog
         {
             SuggestedStartLocation = PickerLocationId.Desktop,
         };
-        if (type is PinType.Batch)
+        switch (type)
         {
-            filePicker.FileTypeFilter.Add(".bat");
-            filePicker.FileTypeFilter.Add(".cmd");
+            case PinType.Batch:
+                filePicker.FileTypeFilter.Add(".bat");
+                filePicker.FileTypeFilter.Add(".cmd");
+                break;
+            case PinType.PowerShell:
+                filePicker.FileTypeFilter.Add(".ps1");
+                break;
+            case PinType.SystemTool:
+                filePicker.FileTypeFilter.Add(".msc");
+                filePicker.FileTypeFilter.Add(".exe");
+                break;
+            default:
+                filePicker.FileTypeFilter.Add("*");
+                break;
         }
 
         var file = await filePicker.PickSingleFileAsync();
@@ -162,11 +185,13 @@ public sealed partial class PinDialog : ContentDialog
             return;
         }
 
-        if (TypeCombo.SelectedItem is not PinType type)
+        if (TypeCombo.SelectedItem is not TypeOption option)
         {
             ShowError(Loc.T("ValidationTypeRequired"), args);
             return;
         }
+
+        var type = option.Type;
 
         if (string.IsNullOrWhiteSpace(target) && type is not PinType.Custom)
         {

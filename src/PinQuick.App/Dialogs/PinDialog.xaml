@@ -53,6 +53,7 @@
                       Grid.Row="2"
                       Header="{x:Bind svc:Strings.FieldType}"
                       HorizontalAlignment="Stretch"
+                      DisplayMemberPath="Display"
                       SelectionChanged="TypeCombo_SelectionChanged" />
 
             <Grid Grid.Row="3" ColumnSpacing="8">
