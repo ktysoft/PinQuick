@@ -208,6 +208,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Header -->
@@ -340,7 +341,6 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition x:Name="CollectionsRow" Height="*" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
                 <TextBlock Grid.Row="0"
@@ -412,17 +412,6 @@
                           ItemTemplate="{StaticResource CollectionTemplate}"
                           SelectionMode="Single"
                           Margin="0,0,0,8" />
-
-                <Button Grid.Row="5"
-                        Margin="16,12,16,12"
-                        HorizontalAlignment="Stretch"
-                        Click="AboutMenuItem_Click"
-                        ToolTipService.ToolTip="{x:Bind svc:Strings.SideAboutTooltip}">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE946;" FontSize="14" />
-                        <TextBlock Text="{x:Bind svc:Strings.SideAbout}" VerticalAlignment="Center" />
-                    </StackPanel>
-                </Button>
             </Grid>
 
             <!-- Pin grid -->
@@ -512,9 +501,76 @@ DoubleTapped="PinGrid_DoubleTapped"
 
             </Grid>
 
+        <!-- Footer -->
+        <Grid Grid.Row="2"
+              Padding="16,4,16,4"
+              ColumnSpacing="8"
+              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+              BorderThickness="0,1,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <HyperlinkButton Grid.Column="0"
+                             Padding="0"
+                             HorizontalAlignment="Center"
+                             Click="AboutMenuItem_Click"
+                             ToolTipService.ToolTip="{x:Bind svc:Strings.SideAboutTooltip}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE946;" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind svc:Strings.SideAbout}" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+            </HyperlinkButton>
+
+            <HyperlinkButton Grid.Column="1"
+                             Padding="0"
+                             HorizontalAlignment="Center"
+                             Click="FooterWebsiteLink_Click">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE774;" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind svc:Strings.FooterWebsite}" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+            </HyperlinkButton>
+
+            <HyperlinkButton Grid.Column="2"
+                             Padding="0"
+                             HorizontalAlignment="Center"
+                             Click="FooterEmailLink_Click">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE715;" FontSize="13" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind svc:Strings.FooterEmail}" FontSize="12" VerticalAlignment="Center" />
+                </StackPanel>
+            </HyperlinkButton>
+
+            <Button Grid.Column="3"
+                    Padding="10,3"
+                    CornerRadius="12"
+                    HorizontalAlignment="Center"
+                    Click="FooterSponsorLink_Click"
+                    ToolTipService.ToolTip="{x:Bind svc:Strings.FooterSponsorTooltip}"
+                    Style="{StaticResource AccentButtonStyle}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="☕" FontFamily="Segoe UI Emoji" FontSize="14" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind svc:Strings.FooterSponsor}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+
+            <TextBlock Grid.Column="5"
+                       Text="{x:Bind svc:Strings.FooterVersionNumber}"
+                       HorizontalAlignment="Right"
+                       VerticalAlignment="Center"
+                       FontSize="12"
+                       Opacity="0.7" />
+        </Grid>
+
         <!-- Onboarding turu: karartılmış overlay + hedef vurgu + bilgi kartı -->
         <Grid x:Name="TourOverlay"
-              Grid.RowSpan="2"
+              Grid.RowSpan="3"
               Visibility="Collapsed"
               Canvas.ZIndex="1000"
               Background="#66000000"

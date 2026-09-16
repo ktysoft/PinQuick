@@ -3,6 +3,27 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [1.0.0] - 2026-09-16
+
+### Eklendi
+
+- Pencere altına footer çubuğu eklendi: web sitesi, e-posta adresi ve bağış
+  (GitHub Sponsors) bağlantıları tek satırda tıklanabilir olarak sunuluyor.
+
+### Değişti
+
+- Footer düzeni yenilendi: "Hakkında" menü öğesi sidebar'dan footer'a taşındı
+  ve web sitesi/e-posta/bağış bağlantılarıyla aynı satırda; sürüm bilgisi
+  barın en sağında gösteriliyor.
+- "Bağış Yap" bağlantısı dikkat çekici bir butona dönüştürüldü: ☕ simgesiyle
+  (GitHub Sponsors hedefi korunuyor).
+
+### Düzeltildi
+
+- Masaüstü veya başka bir konumdan eklenen Windows kısayollarının (.lnk / .url)
+  simgeleri artık gösteriliyor: kısayol dosyası yerine kısayolun işaret ettiği
+  gerçek hedef dosya/klasörün (varsa özel ikonunun) simgesi kullanılıyor.
+
 ## [0.9.1] - 2026-09-12
 
 ### Eklendi

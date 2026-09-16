@@ -77,6 +77,12 @@ taşınabilir şekilde yapılandırılabilir.
 | `Ctrl + I`  | İçe aktar        |
 | `Esc`       | Aramayı temizle  |
 
+## Support KTYSoft
+
+Bu proje ücretsiz ve açık kaynak olarak geliştirilmektedir.
+
+Projeyi faydalı bulduysanız KTYSoft'u [GitHub Sponsors](https://github.com/sponsors/ktysoft) üzerinden destekleyebilirsiniz.
+
 ## Lisans
 
 [MIT](LICENSE)

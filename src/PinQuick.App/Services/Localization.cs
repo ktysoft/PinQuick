@@ -236,6 +236,12 @@ public static class Loc
         ["AboutWebsite"] = "Web Sitesi: {0}",
         ["AboutEmail"] = "E-posta: {0}",
         ["AboutLicense"] = "Lisans: {0}",
+        ["AboutSponsorLabel"] = "Açık kaynak yazılımı destekle",
+        ["FooterWebsite"] = "ktysoft.com.tr",
+        ["FooterEmail"] = "info@ktysoft.com.tr",
+        ["FooterSponsor"] = "Bağış Yap",
+        ["FooterSponsorTooltip"] = "KTYSoft'u GitHub Sponsors üzerinden destekle",
+        ["FooterVersion"] = "Sürüm: {0}",
         ["CloseButton"] = "Kapat",
         ["ErrorTitle"] = "Hata",
         ["TrayShow"] = "PinQuick'i Göster",
@@ -436,6 +442,12 @@ public static class Loc
         ["AboutWebsite"] = "Website: {0}",
         ["AboutEmail"] = "Email: {0}",
         ["AboutLicense"] = "License: {0}",
+        ["AboutSponsorLabel"] = "Support this open source project",
+        ["FooterWebsite"] = "ktysoft.com.tr",
+        ["FooterEmail"] = "info@ktysoft.com.tr",
+        ["FooterSponsor"] = "Donate",
+        ["FooterSponsorTooltip"] = "Support KTYSoft via GitHub Sponsors",
+        ["FooterVersion"] = "Version: {0}",
         ["CloseButton"] = "Close",
         ["ErrorTitle"] = "Error",
         ["TrayShow"] = "Show PinQuick",
@@ -509,6 +521,12 @@ public static class Strings
     public static string GridReorderTooltip => Loc.T("GridReorderTooltip");
     public static string SelBarAddToCollection => Loc.T("SelBarAddToCollection");
     public static string SelBarClear => Loc.T("SelBarClear");
+
+    public static string FooterWebsite => Loc.T("FooterWebsite");
+    public static string FooterEmail => Loc.T("FooterEmail");
+    public static string FooterSponsor => Loc.T("FooterSponsor");
+    public static string FooterSponsorTooltip => Loc.T("FooterSponsorTooltip");
+    public static string FooterVersionNumber => string.Format(Loc.T("FooterVersion"), AppInfo.Version);
 
     public static string EmptyNoPins => Loc.T("EmptyNoPins");
     public static string EmptyDescription => Loc.T("EmptyDescription");

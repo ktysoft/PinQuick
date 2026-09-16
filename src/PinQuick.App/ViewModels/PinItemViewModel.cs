@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using PinQuick.Core.Models;
 using PinQuick.Core.Security;
 using PinQuick.App.Services;
+using PinQuick.Windows;
 using Windows.Storage;
 using Windows.Storage.FileProperties;
 
@@ -174,7 +175,7 @@ public sealed partial class PinItemViewModel : ObservableObject
 
         if (!string.IsNullOrEmpty(iconValue) && !IsGlyphCode(iconValue))
         {
-            var image = await LoadIconImageAsync(iconValue, preferFolder: false);
+            var image = await LoadIconImageAsync(iconValue);
             if (image is not null)
             {
                 IconSource = image;
@@ -186,7 +187,7 @@ public sealed partial class PinItemViewModel : ObservableObject
 
         if (string.IsNullOrEmpty(iconValue) && SupportsIcon(Pin.Type) && !string.IsNullOrWhiteSpace(Pin.Target))
         {
-            var image = await LoadIconImageAsync(Pin.Target, preferFolder: Pin.Type is PinType.Folder);
+            var image = await LoadIconImageAsync(Pin.Target);
             if (image is not null)
             {
                 IconSource = image;
@@ -196,9 +197,11 @@ public sealed partial class PinItemViewModel : ObservableObject
         }
     }
 
-    private static async Task<BitmapImage?> LoadIconImageAsync(string path, bool preferFolder)
+    private static async Task<BitmapImage?> LoadIconImageAsync(string path)
     {
-        if (IconCache.TryGetValue(path, out var cached))
+        var iconPath = ShortcutResolver.ResolveIconSource(path) ?? path;
+
+        if (IconCache.TryGetValue(iconPath, out var cached))
         {
             return cached;
         }
@@ -206,14 +209,21 @@ public sealed partial class PinItemViewModel : ObservableObject
         BitmapImage? bitmap;
         try
         {
-            StorageItemThumbnail thumbnail = preferFolder
-                ? await (await StorageFolder.GetFolderFromPathAsync(path)).GetThumbnailAsync(ThumbnailMode.SingleItem, 256)
-                : await (await StorageFile.GetFileFromPathAsync(path)).GetThumbnailAsync(ThumbnailMode.SingleItem, 256);
-
-            using (thumbnail)
+            if (Directory.Exists(iconPath))
             {
+                using var thumbnail = await (await StorageFolder.GetFolderFromPathAsync(iconPath)).GetThumbnailAsync(ThumbnailMode.SingleItem, 256);
                 bitmap = new BitmapImage();
                 await bitmap.SetSourceAsync(thumbnail);
+            }
+            else if (File.Exists(iconPath))
+            {
+                using var thumbnail = await (await StorageFile.GetFileFromPathAsync(iconPath)).GetThumbnailAsync(ThumbnailMode.SingleItem, 256);
+                bitmap = new BitmapImage();
+                await bitmap.SetSourceAsync(thumbnail);
+            }
+            else
+            {
+                return null;
             }
         }
         catch
@@ -221,7 +231,7 @@ public sealed partial class PinItemViewModel : ObservableObject
             return null;
         }
 
-        IconCache[path] = bitmap;
+        IconCache[iconPath] = bitmap;
         return bitmap;
     }
 

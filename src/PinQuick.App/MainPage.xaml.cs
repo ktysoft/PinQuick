@@ -833,6 +833,20 @@ public sealed partial class MainPage : Page
         content.Children.Add(CreateLinkText(Loc.T("AboutWebsite"), $"https://{AppInfo.Website}"));
         content.Children.Add(CreateLinkText(Loc.T("AboutEmail"), $"mailto:{AppInfo.Email}"));
         content.Children.Add(new TextBlock { Text = string.Format(Loc.T("AboutLicense"), AppInfo.License) });
+        content.Children.Add(new TextBlock
+        {
+            Text = Loc.T("AboutSponsorLabel"),
+            Margin = new Thickness(0, 8, 0, 0),
+            Opacity = 0.8,
+        });
+        var sponsorLink = new HyperlinkButton
+        {
+            Content = "GitHub Sponsors",
+            Padding = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center,
+        };
+        sponsorLink.Click += (_, _) => LaunchUri(AppInfo.SponsorUrl);
+        content.Children.Add(sponsorLink);
 
         var dialog = new ContentDialog
         {
@@ -894,6 +908,15 @@ public sealed partial class MainPage : Page
         {
         }
     }
+
+    private void FooterWebsiteLink_Click(object sender, RoutedEventArgs e)
+        => LaunchUri($"https://{AppInfo.Website}");
+
+    private void FooterEmailLink_Click(object sender, RoutedEventArgs e)
+        => LaunchUri($"mailto:{AppInfo.Email}");
+
+    private void FooterSponsorLink_Click(object sender, RoutedEventArgs e)
+        => LaunchUri(AppInfo.SponsorUrl);
 
     private async void ExportMenuItem_Click(object sender, RoutedEventArgs e)
     {
