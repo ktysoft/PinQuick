@@ -3,6 +3,27 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [1.2.0] - 2026-09-16
+
+### Geliştirmeler
+
+- Koleksiyonlar artık sürükle-bırak ile yeniden sıralanabiliyor; yeni sıra kalıcı olarak
+  kaydediliyor.
+- Arama kutusu canlı arama yapıyor; her harf yazıldığında sonuçlar anında güncelleniyor.
+- Sıra durumu/hatalar için eski alt bilgi satırı yerine sıralama araç çubuğu eklendi;
+  (varsayılan, ada göre A→Z, ada göre Z→A, son kullanılanlara göre, türe göre) sıralama
+  ve pin sayısı gösteriliyor. Bilgi/hatalar ise kısa süreliğine görünen şeffaf bir
+  InfoBar'da gösteriliyor.
+- Aydınlık temada tema değiştirme ikonu daha uygun bir güneş ikonuyla değiştirildi.
+
+### Düzeltildi
+
+- Kart ikonları bazen olması gerekenden küçük görünüyordu; ikon alanı sabit boyuta
+  alındı ve görsel her kutuyu dolduracak şekilde ölçekleniyor.
+- Sıralama menüsü (RadioMenuFlyoutItem) ile çalışmayan pin sıralaması düzeltildi.
+- Koleksiyon sıralaması WinUI yerleşik CanReorderItems mekanizması ile yeniden
+  yazıldı; artık güvenilir şekilde çalışıyor.
+
 ## [1.1.0] - 2026-09-16
 
 ### Geliştirmeler

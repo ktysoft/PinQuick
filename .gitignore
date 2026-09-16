@@ -36,3 +36,6 @@ Agent.md
 # Yerel notlar
 bilinen hatalar.txt
 yapılacaklar.txt
+
+# Sürüm paketleri (release asset)
+PinQuick-v*.zip

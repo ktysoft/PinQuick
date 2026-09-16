@@ -57,6 +57,19 @@ public sealed class CollectionManagerTests : DatabaseTestBase
     }
 
     [Fact]
+    public async Task ReorderAsync_PersistsNewOrder()
+    {
+        var a = await CollectionManager.AddAsync(new Collection { Name = "A" });
+        var b = await CollectionManager.AddAsync(new Collection { Name = "B" });
+        var c = await CollectionManager.AddAsync(new Collection { Name = "C" });
+
+        await CollectionManager.ReorderAsync(new[] { (c, 0), (a, 1), (b, 2) });
+
+        var collections = await CollectionManager.GetAllAsync();
+        Assert.Equal(new[] { "C", "A", "B" }, collections.Select(col => col.Name));
+    }
+
+    [Fact]
     public async Task DeleteAsync_NonExisting_ThrowsKeyNotFound()
     {
         await Assert.ThrowsAsync<KeyNotFoundException>(() => CollectionManager.DeleteAsync(9999));

@@ -9,6 +9,18 @@ using PinQuick.App.Services;
 
 namespace PinQuick.App.ViewModels;
 
+/// <summary>
+/// Pin listesinin sıralama düzeni.
+/// </summary>
+public enum PinSortMode
+{
+    Default,
+    NameAsc,
+    NameDesc,
+    Recent,
+    Type,
+}
+
 public sealed partial class SidebarFilterItemViewModel : ObservableObject
 {
     public PinFilter Filter { get; }
@@ -75,6 +87,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     public partial PinFilter CurrentFilter { get; set; } = PinFilter.All;
+
+    [ObservableProperty]
+    public partial PinSortMode SortMode { get; set; } = PinSortMode.Default;
 
     [ObservableProperty]
     public partial ObservableCollection<SidebarFilterItemViewModel> Filters { get; set; } = new();
@@ -160,6 +175,8 @@ public sealed partial class MainViewModel : ObservableObject
 
     partial void OnCurrentFilterChanged(PinFilter value) => ApplyFilter();
 
+    partial void OnSortModeChanged(PinSortMode value) => ApplyFilter();
+
     partial void OnSelectedFilterItemChanged(SidebarFilterItemViewModel? value)
     {
         if (value is null)
@@ -237,15 +254,23 @@ public sealed partial class MainViewModel : ObservableObject
             pinned = pinned.Where(pin => MatchesQuery(pin, query));
         }
 
-        var sorted = CurrentFilter == PinFilter.Recent
+        var sorted = CurrentFilter == PinFilter.Recent && SortMode == PinSortMode.Default
             ? pinned.OrderByDescending(pin => pin.LastUsedAt ?? DateTime.MinValue)
-            : pinned
-                .OrderBy(pin => pin.SortOrder)
-                .ThenBy(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase);
+            : SortMode switch
+            {
+                PinSortMode.NameAsc => pinned.OrderBy(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase),
+                PinSortMode.NameDesc => pinned.OrderByDescending(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase),
+                PinSortMode.Recent => pinned.OrderByDescending(pin => pin.LastUsedAt ?? DateTime.MinValue),
+                PinSortMode.Type => pinned.OrderBy(pin => pin.Type).ThenBy(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase),
+                _ => pinned
+                    .OrderBy(pin => pin.SortOrder)
+                    .ThenBy(pin => pin.Title, StringComparer.CurrentCultureIgnoreCase),
+            };
 
         var canReorder = CurrentFilter == PinFilter.All
             && SelectedCollection is null
-            && string.IsNullOrEmpty(query);
+            && string.IsNullOrEmpty(query)
+            && SortMode == PinSortMode.Default;
         if (CanReorder != canReorder)
         {
             CanReorder = canReorder;
@@ -457,6 +482,16 @@ public sealed partial class MainViewModel : ObservableObject
         };
     }
 
+    public static string GetSortDisplayName(PinSortMode mode)
+        => mode switch
+        {
+            PinSortMode.NameAsc => Loc.T("SortNameAsc"),
+            PinSortMode.NameDesc => Loc.T("SortNameDesc"),
+            PinSortMode.Recent => Loc.T("SortRecent"),
+            PinSortMode.Type => Loc.T("SortType"),
+            _ => Loc.T("SortDefault"),
+        };
+
     public async Task<int> NextSortOrderAsync()
     {
         var pins = await _pinManager.GetAllAsync();
@@ -490,6 +525,30 @@ public sealed partial class MainViewModel : ObservableObject
         if (orderedItems.Count > 0)
         {
             await _pinManager.ReorderAsync(orderedItems);
+        }
+    }
+
+    /// <summary>
+    /// Koleksiyonların sürükle-bırak sonrası yeni sırasını veritabanına yazar.
+    /// </summary>
+    public async Task PersistCollectionsOrderAsync()
+    {
+        var orderedItems = new List<(long Id, int SortOrder)>();
+        for (var i = 0; i < Collections.Count; i++)
+        {
+            var collection = Collections[i].Item;
+            if (collection.Id == 0)
+            {
+                continue;
+            }
+
+            collection.SortOrder = i;
+            orderedItems.Add((collection.Id, i));
+        }
+
+        if (orderedItems.Count > 0)
+        {
+            await _collectionManager.ReorderAsync(orderedItems);
         }
     }
 

@@ -48,4 +48,7 @@ public sealed class CollectionManager
 
     public Task DeleteAsync(long id, CancellationToken cancellationToken = default)
         => _repository.DeleteAsync(id, cancellationToken);
+
+    public Task ReorderAsync(IReadOnlyList<(long Id, int SortOrder)> orderedItems, CancellationToken cancellationToken = default)
+        => _repository.ReorderAsync(orderedItems, cancellationToken);
 }

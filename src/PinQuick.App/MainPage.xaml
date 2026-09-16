@@ -37,15 +37,21 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <Grid>
+                <Grid Width="34"
+                      Height="34"
+                      HorizontalAlignment="Left">
                     <FontIcon Glyph="{x:Bind IconGlyph}"
-                              FontSize="28"
+                              FontSize="30"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                               Visibility="{x:Bind HasIconSource, Mode=OneWay, Converter={StaticResource BoolToVisibility}, ConverterParameter=Invert}" />
                     <Image Source="{x:Bind IconSource, Mode=OneWay}"
-                           Width="30"
-                           Height="30"
-                           Stretch="Uniform"
+                           Width="34"
+                           Height="34"
+                           Stretch="UniformToFill"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"
                            Visibility="{x:Bind HasIconSource, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                     <FontIcon Glyph="&#xE7BA;"
                               FontSize="16"
@@ -223,7 +229,7 @@
                      Margin="16,0,0,0"
                      VerticalAlignment="Center"
                      PlaceholderText="{x:Bind svc:Strings.SearchPlaceholder}"
-                     Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay}"
+                     Text="{x:Bind ViewModel.SearchQuery, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      GotFocus="SearchBox_GotFocus">
                 <TextBox.KeyboardAccelerators>
                     <KeyboardAccelerator Key="Escape" Invoked="ClearSearch_Invoked" />
@@ -301,7 +307,7 @@
                     VerticalAlignment="Center"
                     ToolTipService.ToolTip="{x:Bind svc:Strings.ThemeToggleTooltip}"
                     Click="ThemeToggleButton_Click">
-                <FontIcon x:Name="ThemeToggleIcon" Glyph="&#xE771;" FontSize="14" />
+                <FontIcon x:Name="ThemeToggleIcon" Glyph="&#xE706;" FontSize="14" />
             </Button>
 
             <Button Grid.Column="8"
@@ -376,6 +382,10 @@
                           SelectedItem="{x:Bind ViewModel.SelectedCollectionItem, Mode=TwoWay}"
                           ItemTemplate="{StaticResource CollectionTemplate}"
                           SelectionMode="Single"
+                          AllowDrop="True"
+                          CanDragItems="True"
+                          CanReorderItems="True"
+                          DragItemsCompleted="CollectionsList_DragItemsCompleted"
                           Margin="0,0,0,8" />
             </Grid>
 
@@ -386,12 +396,57 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <TextBlock x:Name="StatusBar"
-                           Grid.Row="0"
-                           Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
-                           Margin="0,0,0,8"
-                           Opacity="0.7"
-                           IsHitTestVisible="False" />
+                <!-- Sıralama/filtre araç çubuğu -->
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="SortButton"
+                            Grid.Column="0"
+                            VerticalAlignment="Center"
+                            ToolTipService.ToolTip="{x:Bind svc:Strings.SortTooltip}">
+                        <Button.Flyout>
+                            <MenuFlyout Opened="SortFlyout_Opened">
+                                <RadioMenuFlyoutItem x:Name="SortDefaultRadio"
+                                                     GroupName="PinSort"
+                                                     Text="{x:Bind svc:Strings.SortDefault}"
+                                                     Click="SortRadio_Click" />
+                                <RadioMenuFlyoutItem x:Name="SortNameAscRadio"
+                                                     GroupName="PinSort"
+                                                     Text="{x:Bind svc:Strings.SortNameAsc}"
+                                                     Click="SortRadio_Click" />
+                                <RadioMenuFlyoutItem x:Name="SortNameDescRadio"
+                                                     GroupName="PinSort"
+                                                     Text="{x:Bind svc:Strings.SortNameDesc}"
+                                                     Click="SortRadio_Click" />
+                                <RadioMenuFlyoutItem x:Name="SortRecentRadio"
+                                                     GroupName="PinSort"
+                                                     Text="{x:Bind svc:Strings.SortRecent}"
+                                                     Click="SortRadio_Click" />
+                                <RadioMenuFlyoutItem x:Name="SortTypeRadio"
+                                                     GroupName="PinSort"
+                                                     Text="{x:Bind svc:Strings.SortType}"
+                                                     Click="SortRadio_Click" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8CB;" FontSize="14" />
+                            <TextBlock x:Name="SortButtonText"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"
+                                       Padding="0,2,0,0" />
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock Grid.Column="2"
+                               x:Name="PinCountText"
+                               VerticalAlignment="Center"
+                               Opacity="0.6"
+                               FontSize="12" />
+                </Grid>
 
                 <GridView x:Name="PinGrid"
                           Grid.Row="1"
@@ -496,6 +551,15 @@ DoubleTapped="PinGrid_DoubleTapped"
                         </Button>
                     </StackPanel>
                 </Border>
+
+                <InfoBar x:Name="StatusInfoBar"
+                         Grid.Row="1"
+                         HorizontalAlignment="Stretch"
+                         VerticalAlignment="Top"
+                         Margin="0,2,0,0"
+                         IsClosable="True"
+                         IsOpen="False"
+                         Canvas.ZIndex="150" />
             </Grid>
 
             </Grid>

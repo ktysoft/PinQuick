@@ -3,6 +3,7 @@ using Windows.Foundation;
 using Windows.Storage;
 using Windows.System;
 using Windows.UI.Core;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -30,6 +31,11 @@ public sealed partial class MainPage : Page
         InitializeComponent();
         RootGrid.AllowDrop = true;
 
+        _statusTimer = DispatcherQueue.CreateTimer();
+        _statusTimer.Interval = TimeSpan.FromSeconds(6);
+        _statusTimer.IsRepeating = false;
+        _statusTimer.Tick += (_, _) => StatusInfoBar.IsOpen = false;
+
         ViewModel = new MainViewModel(App.Services.PinManager, App.Services.CollectionManager, App.Services.ProcessLauncher);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         ViewModel.Pins.CollectionChanged += (_, _) => UpdateEmptyState();
@@ -37,12 +43,15 @@ public sealed partial class MainPage : Page
         Loaded += OnLoaded;
     }
 
+    private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _statusTimer;
+
     private bool _suppressStartupSearchFlyout;
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         await ViewModel.LoadCommand.ExecuteAsync(null);
         UpdateEmptyState();
+        UpdateSortButton();
         _suppressStartupSearchFlyout = true;
         SearchBox.Focus(FocusState.Programmatic);
         UpdateThemeToggleGlyph();
@@ -72,14 +81,59 @@ public sealed partial class MainPage : Page
     {
         var showEmptyState = ViewModel.Pins.Count == 0 && string.IsNullOrEmpty(ViewModel.StatusMessage);
         EmptyStatePanel.Visibility = showEmptyState ? Visibility.Visible : Visibility.Collapsed;
+        UpdatePinCount();
     }
+
+    private void UpdatePinCount()
+        => PinCountText.Text = string.Format(Loc.T("CountPins"), ViewModel.Pins.Count);
 
     private void UpdateStatusBar()
     {
-        StatusBar.Visibility = string.IsNullOrEmpty(ViewModel.StatusMessage)
-            ? Visibility.Collapsed
-            : Visibility.Visible;
+        _statusTimer.Stop();
+
+        var hasMessage = !string.IsNullOrEmpty(ViewModel.StatusMessage);
+        StatusInfoBar.Message = ViewModel.StatusMessage;
+        StatusInfoBar.IsOpen = hasMessage;
+
+        if (hasMessage)
+        {
+            _statusTimer.Start();
+        }
     }
+
+    private void SortFlyout_Opened(object? sender, object e)
+    {
+        var mode = ViewModel.SortMode;
+        SortDefaultRadio.IsChecked = mode == PinSortMode.Default;
+        SortNameAscRadio.IsChecked = mode == PinSortMode.NameAsc;
+        SortNameDescRadio.IsChecked = mode == PinSortMode.NameDesc;
+        SortRecentRadio.IsChecked = mode == PinSortMode.Recent;
+        SortTypeRadio.IsChecked = mode == PinSortMode.Type;
+    }
+
+    private void SortRadio_Click(object sender, RoutedEventArgs e)
+    {
+        var mode = sender switch
+        {
+            { } item when ReferenceEquals(item, SortDefaultRadio) => (PinSortMode?)PinSortMode.Default,
+            { } item when ReferenceEquals(item, SortNameAscRadio) => (PinSortMode?)PinSortMode.NameAsc,
+            { } item when ReferenceEquals(item, SortNameDescRadio) => (PinSortMode?)PinSortMode.NameDesc,
+            { } item when ReferenceEquals(item, SortRecentRadio) => (PinSortMode?)PinSortMode.Recent,
+            { } item when ReferenceEquals(item, SortTypeRadio) => (PinSortMode?)PinSortMode.Type,
+            _ => null,
+        };
+
+        if (!mode.HasValue || mode.Value == ViewModel.SortMode)
+        {
+            return;
+        }
+
+        ViewModel.SortMode = mode.Value;
+        UpdateSortButton();
+    }
+
+    private void UpdateSortButton()
+        => SortButtonText.Text = MainViewModel.GetSortDisplayName(ViewModel.SortMode);
 
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
@@ -1371,7 +1425,7 @@ public sealed partial class MainPage : Page
 
     private void UpdateThemeToggleGlyph()
     {
-        ThemeToggleIcon.Glyph = AppSettings.Current.Theme == "Dark" ? "\uE708" : "\uE771";
+        ThemeToggleIcon.Glyph = AppSettings.Current.Theme == "Dark" ? "\uE708" : "\uE706";
     }
 
     private void ThemeToggleButton_Click(object sender, RoutedEventArgs e)
@@ -1421,5 +1475,10 @@ public sealed partial class MainPage : Page
         {
             await ViewModel.AddSelectedToCollectionAsync(pinIds.Distinct().ToList(), collectionId);
         }
+    }
+
+    private async void CollectionsList_DragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs args)
+    {
+        await ViewModel.PersistCollectionsOrderAsync();
     }
 }

@@ -43,6 +43,16 @@ public static class Loc
         ["SideAbout"] = "Hakkında",
         ["SideAboutTooltip"] = "Uygulama hakkında",
         ["GridReorderTooltip"] = "Ana görünümde kartları sürükleyerek sıralayabilirsin",
+        ["DragToReorder"] = "Sıralamak için bırakın",
+
+        // Sorting
+        ["SortTooltip"] = "Sıralama",
+        ["SortDefault"] = "Varsayılan sıra",
+        ["SortNameAsc"] = "Ada göre (A→Z)",
+        ["SortNameDesc"] = "Ada göre (Z→A)",
+        ["SortRecent"] = "Son kullanılanlara göre",
+        ["SortType"] = "Türe göre",
+        ["CountPins"] = "{0} pin",
 
         // Filters
         ["FilterAll"] = "Tüm Pinler",
@@ -283,6 +293,15 @@ public static class Loc
         ["SideAbout"] = "About",
         ["SideAboutTooltip"] = "About the app",
         ["GridReorderTooltip"] = "Drag cards to reorder in the main view",
+        ["DragToReorder"] = "Drop to reorder",
+
+        ["SortTooltip"] = "Sorting",
+        ["SortDefault"] = "Default order",
+        ["SortNameAsc"] = "By name (A–Z)",
+        ["SortNameDesc"] = "By name (Z–A)",
+        ["SortRecent"] = "By last used",
+        ["SortType"] = "By type",
+        ["CountPins"] = "{0} pins",
 
         ["FilterAll"] = "All Pins",
         ["FilterFavorites"] = "Favorites",
@@ -519,6 +538,13 @@ public static class Strings
     public static string SideAbout => Loc.T("SideAbout");
     public static string SideAboutTooltip => Loc.T("SideAboutTooltip");
     public static string GridReorderTooltip => Loc.T("GridReorderTooltip");
+    public static string DragToReorder => Loc.T("DragToReorder");
+    public static string SortTooltip => Loc.T("SortTooltip");
+    public static string SortDefault => Loc.T("SortDefault");
+    public static string SortNameAsc => Loc.T("SortNameAsc");
+    public static string SortNameDesc => Loc.T("SortNameDesc");
+    public static string SortRecent => Loc.T("SortRecent");
+    public static string SortType => Loc.T("SortType");
     public static string SelBarAddToCollection => Loc.T("SelBarAddToCollection");
     public static string SelBarClear => Loc.T("SelBarClear");
 

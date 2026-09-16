@@ -9,4 +9,5 @@ public interface ICollectionRepository
     Task<long> AddAsync(Collection collection, CancellationToken cancellationToken = default);
     Task UpdateAsync(Collection collection, CancellationToken cancellationToken = default);
     Task DeleteAsync(long id, CancellationToken cancellationToken = default);
+    Task ReorderAsync(IReadOnlyList<(long Id, int SortOrder)> orderedItems, CancellationToken cancellationToken = default);
 }

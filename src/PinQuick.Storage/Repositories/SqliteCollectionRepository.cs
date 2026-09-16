@@ -126,6 +126,47 @@ public sealed class SqliteCollectionRepository : ICollectionRepository
         }
     }
 
+    public async Task ReorderAsync(IReadOnlyList<(long Id, int SortOrder)> orderedItems, CancellationToken cancellationToken = default)
+    {
+        if (orderedItems is null || orderedItems.Count == 0)
+        {
+            return;
+        }
+
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync(cancellationToken);
+
+        await using var transaction = connection.BeginTransaction();
+
+        using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText =
+            """
+            UPDATE Collections
+            SET SortOrder = $sortOrder, UpdatedAt = $updatedAt
+            WHERE Id = $id
+            """;
+
+        var sortOrderParameter = command.Parameters.Add("$sortOrder", SqliteType.Integer);
+        var updatedAtParameter = command.Parameters.Add("$updatedAt", SqliteType.Text);
+        var idParameter = command.Parameters.Add("$id", SqliteType.Integer);
+
+        var updatedAt = DateTime.UtcNow.ToString("o");
+        foreach (var (id, sortOrder) in orderedItems)
+        {
+            sortOrderParameter.Value = sortOrder;
+            updatedAtParameter.Value = updatedAt;
+            idParameter.Value = id;
+            var affected = await command.ExecuteNonQueryAsync(cancellationToken);
+            if (affected == 0)
+            {
+                throw new KeyNotFoundException($"Id değeri {id} olan koleksiyon bulunamadı.");
+            }
+        }
+
+        transaction.Commit();
+    }
+
     private static Collection ReadCollection(SqliteDataReader reader)
     {
         return new Collection
