@@ -61,6 +61,10 @@ public partial class App : Application
             catch
             {
             }
+
+            // Zaman uyumsuz handler'lar ve XAML kaynak hataları gibi kurtarılabilir
+            // durumlarda uygulamanın çökmesini engelle (log yukarıda tutulur).
+            e.Handled = true;
         };
     }
 

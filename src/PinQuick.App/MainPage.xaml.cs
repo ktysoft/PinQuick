@@ -45,6 +45,8 @@ public sealed partial class MainPage : Page
 
     private readonly Microsoft.UI.Dispatching.DispatcherQueueTimer _statusTimer;
 
+    private bool _settingsDialogOpen;
+
     private bool _suppressStartupSearchFlyout;
 
     private async void OnLoaded(object sender, RoutedEventArgs e)
@@ -137,64 +139,77 @@ public sealed partial class MainPage : Page
 
     private async void SettingsButton_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new SettingsDialog
-        {
-            XamlRoot = RootGrid.XamlRoot,
-            RequestedTheme = ViewModel.RequestedTheme,
-        };
-
-        var result = await dialog.ShowAsync();
-
-        if (dialog.ShowTourRequested)
-        {
-            ShowTour();
-            return;
-        }
-
-        if (result != ContentDialogResult.Primary)
+        if (_settingsDialogOpen)
         {
             return;
         }
 
-        var settings = AppSettings.Current;
-        var languageChanged = !string.Equals(settings.Language, dialog.SelectedLanguage, StringComparison.Ordinal);
-
-        ViewModel.SetThemeCommand.Execute(dialog.SelectedTheme);
-        settings.Theme = dialog.SelectedTheme;
-        settings.Language = dialog.SelectedLanguage;
-        settings.MinimizeToTray = dialog.MinimizeToTrayEnabled;
-        settings.GlobalHotkeyEnabled = dialog.GlobalHotkeyEnabled;
-        settings.HotkeyModifiers = dialog.HotkeyModifiers;
-        settings.HotkeyKey = dialog.HotkeyKey;
-        settings.AutoBackupFrequency = dialog.SelectedAutoBackup;
-        settings.Save();
-        StartupManager.SetEnabled(dialog.StartupEnabled);
-
-        var hotkeyApplied = (App.Window as MainWindow)?.ApplyNativeSettings() ?? true;
-        if (!hotkeyApplied)
+        _settingsDialogOpen = true;
+        try
         {
-            settings.GlobalHotkeyEnabled = false;
-            settings.Save();
-            (App.Window as MainWindow)?.ApplyNativeSettings();
-            await ShowErrorAsync(Loc.T("HotkeyMsgInUse"));
-        }
-
-        if (languageChanged)
-        {
-            var confirm = new ContentDialog
+            var dialog = new SettingsDialog
             {
-                Title = Loc.T("RestartButton"),
-                Content = Loc.T("RestartRequiredMessage"),
-                PrimaryButtonText = Loc.T("RestartButton"),
-                CloseButtonText = Loc.T("CancelButton"),
-                DefaultButton = ContentDialogButton.Primary,
                 XamlRoot = RootGrid.XamlRoot,
+                RequestedTheme = ViewModel.RequestedTheme,
             };
 
-            if (await confirm.ShowAsync() == ContentDialogResult.Primary)
+            var result = await dialog.ShowAsync();
+
+            if (dialog.ShowTourRequested)
             {
-                App.Restart();
+                ShowTour();
+                return;
             }
+
+            if (result != ContentDialogResult.Primary)
+            {
+                return;
+            }
+
+            var settings = AppSettings.Current;
+            var languageChanged = !string.Equals(settings.Language, dialog.SelectedLanguage, StringComparison.Ordinal);
+
+            ViewModel.SetThemeCommand.Execute(dialog.SelectedTheme);
+            settings.Theme = dialog.SelectedTheme;
+            settings.Language = dialog.SelectedLanguage;
+            settings.MinimizeToTray = dialog.MinimizeToTrayEnabled;
+            settings.GlobalHotkeyEnabled = dialog.GlobalHotkeyEnabled;
+            settings.HotkeyModifiers = dialog.HotkeyModifiers;
+            settings.HotkeyKey = dialog.HotkeyKey;
+            settings.AutoBackupFrequency = dialog.SelectedAutoBackup;
+            settings.Save();
+            StartupManager.SetEnabled(dialog.StartupEnabled);
+
+            var hotkeyApplied = (App.Window as MainWindow)?.ApplyNativeSettings() ?? true;
+            if (!hotkeyApplied)
+            {
+                settings.GlobalHotkeyEnabled = false;
+                settings.Save();
+                (App.Window as MainWindow)?.ApplyNativeSettings();
+                await ShowErrorAsync(Loc.T("HotkeyMsgInUse"));
+            }
+
+            if (languageChanged)
+            {
+                var confirm = new ContentDialog
+                {
+                    Title = Loc.T("RestartButton"),
+                    Content = Loc.T("RestartRequiredMessage"),
+                    PrimaryButtonText = Loc.T("RestartButton"),
+                    CloseButtonText = Loc.T("CancelButton"),
+                    DefaultButton = ContentDialogButton.Primary,
+                    XamlRoot = RootGrid.XamlRoot,
+                };
+
+                if (await confirm.ShowAsync() == ContentDialogResult.Primary)
+                {
+                    App.Restart();
+                }
+            }
+        }
+        finally
+        {
+            _settingsDialogOpen = false;
         }
     }
 

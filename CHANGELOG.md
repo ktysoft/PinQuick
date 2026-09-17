@@ -3,6 +3,33 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [1.3.0] - 2026-09-18
+
+### Düzeltildi
+
+- Kurulum sürümünde uygulama Varsayılan WinUI simgesiyle gözüküyordu; artık exe'ye
+  PinQuick'in özel ikonu gömülüyor, görev çubuğu ve kurulan kısayollar da bu ikonu kullanıyor.
+- İlk açılışta kart ikonları görünmüyor, "Yenile" basılınca geliyordu. Windows ikon
+  önbelleği soğukken başarısız olan çıkarma işlemleri artık kısa bir gecikmeyle otomatik
+  bir kez daha deneniyor; ikonlar "Yenile" gerekmeden kendiliğinden geliyor.
+- Bozuk `settings.json` dosyası uygulamanın açılmasını engelliyordu; artık dosya
+  yedeklenerek varsayılan ayarlarla açılıyor. Ayar kaydı atomik yapıldı (yarım yazma riski yok).
+- Koleksiyon silinince veritabanında öksüz pin-koleksiyon kayıtları kalıyordu; SQLite
+  yabancı anahtar zorlaması etkinleştirildi.
+- Async-void ve tekrarlayan hatalar (ör. tek bir ContentDialog kuralı) uygulamayı
+  çökertiyordu; artık günlüğe yazılıp çökme engelleniyor.
+- Ayarlar dişli butonuna hızla çift tıklandığında ikinci bir iletişim kutusu açılmaya
+  çalışılıp çökme olabiliyordu; koruma eklendi.
+- Dışa/içe aktarmada bazı null kayıtlar ve kapalı pinlerin içe aktarımda sessizce
+  yeniden etkinleşmesi sorunları giderildi; `IsEnabled` artık korunuyor.
+- Filtre/sıralama değişimindeki olası yarış durumu giderildi (geç işlem sonucu
+  listenin üzerine yazmıyor).
+
+### Değişti
+
+- Pin düzenleme penceresindeki koleksiyon kutusuna, seçimin pin'i o koleksiyona
+  "eklediği" ve mevcut koleksiyonların korunduğu açıklaması eklendi.
+
 ## [1.2.0] - 2026-09-16
 
 ### Geliştirmeler

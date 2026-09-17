@@ -40,6 +40,7 @@ public static class StoragePaths
             DataSource = databasePath,
             Mode = Microsoft.Data.Sqlite.SqliteOpenMode.ReadWriteCreate,
             Cache = Microsoft.Data.Sqlite.SqliteCacheMode.Shared,
+            ForeignKeys = true,
         };
         return builder.ConnectionString;
     }

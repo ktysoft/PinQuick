@@ -81,6 +81,7 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly CollectionManager _collectionManager;
     private readonly ProcessLauncher _launcher;
     private List<Pin>? _allPins;
+    private int _filterVersion;
 
     [ObservableProperty]
     public partial string SearchQuery { get; set; } = string.Empty;
@@ -124,7 +125,7 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     public partial bool CanReorder { get; set; }
 
-    public MainViewModel(
+public MainViewModel(
         PinManager pinManager,
         CollectionManager collectionManager,
         ProcessLauncher launcher)
@@ -154,7 +155,7 @@ public sealed partial class MainViewModel : ObservableObject
             RecordSearch(value.Trim());
         }
 
-        ApplyFilter();
+        _ = ApplyFilterAsync();
     }
 
     private void RecordSearch(string query)
@@ -173,9 +174,9 @@ public sealed partial class MainViewModel : ObservableObject
         settings.Save();
     }
 
-    partial void OnCurrentFilterChanged(PinFilter value) => ApplyFilter();
+    partial void OnCurrentFilterChanged(PinFilter value) => _ = ApplyFilterAsync();
 
-    partial void OnSortModeChanged(PinSortMode value) => ApplyFilter();
+    partial void OnSortModeChanged(PinSortMode value) => _ = ApplyFilterAsync();
 
     partial void OnSelectedFilterItemChanged(SidebarFilterItemViewModel? value)
     {
@@ -192,7 +193,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    partial void OnSelectedCollectionChanged(Collection? value) => ApplyFilter();
+    partial void OnSelectedCollectionChanged(Collection? value) => _ = ApplyFilterAsync();
 
     partial void OnSelectedCollectionItemChanged(CollectionItemViewModel? value)
     {
@@ -213,7 +214,7 @@ public sealed partial class MainViewModel : ObservableObject
             await LoadCollectionsAsync();
             var pins = await _pinManager.GetAllAsync();
             _allPins = pins.ToList();
-            ApplyFilter();
+            await ApplyFilterAsync();
         }
         finally
         {
@@ -237,12 +238,20 @@ public sealed partial class MainViewModel : ObservableObject
         }
     }
 
-    private void ApplyFilter()
+    /// <summary>
+    /// Filtre/sıralama/arama sonucunu uygular. Kart ikonları (hesaplanan pinler için)
+    /// listeye eklenmeden önce paralel yüklenir; böylece özellikle uygulamanın ilk
+    /// açılışında ikonların görülmemesi sorunu ortadan kalkar. İkincil filtrelerde
+    /// önbellekteki ikonlar hazır olduğundan işlem anında tamamlanır.
+    /// </summary>
+    private async Task ApplyFilterAsync()
     {
         if (_allPins is null)
         {
             return;
         }
+
+        var version = ++_filterVersion;
 
         var query = SearchQuery?.Trim() ?? string.Empty;
         var pinned = _allPins
@@ -276,14 +285,27 @@ public sealed partial class MainViewModel : ObservableObject
             CanReorder = canReorder;
         }
 
-        Pins.Clear();
         var collectionMap = Collections.ToDictionary(c => c.Id, c => c.Item);
+        var items = new List<PinItemViewModel>();
         foreach (var pin in sorted)
         {
             var item = new PinItemViewModel(pin);
             item.ToggleFavoriteRequested = OnToggleFavoriteRequested;
             item.SetCollections(collectionMap, pin.CollectionIds);
 
+            items.Add(item);
+        }
+
+        await Task.WhenAll(items.Select(item => item.LoadIconAsync()));
+
+        if (version != _filterVersion)
+        {
+            return;
+        }
+
+        Pins.Clear();
+        foreach (var item in items)
+        {
             Pins.Add(item);
         }
 
@@ -302,7 +324,7 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        ApplyFilter();
+        await ApplyFilterAsync();
     }
 
     private static bool MatchesQuery(Pin pin, string query)
@@ -325,7 +347,7 @@ public sealed partial class MainViewModel : ObservableObject
     /// Mevcut filtre, arama ve koleksiyon koşullarını koruyarak kart listesini yeniden
     /// oluşturur. Kart boyutu gibi UI değerlerinin yansıması için kullanılır.
     /// </summary>
-    public void RecreatePins() => ApplyFilter();
+    public void RecreatePins() => _ = ApplyFilterAsync();
 
     [RelayCommand]
     private void ClearSelection()
@@ -357,7 +379,7 @@ public sealed partial class MainViewModel : ObservableObject
         await _pinManager.DeleteAsync(id);
         _allPins?.RemoveAll(pin => pin.Id == id);
         SelectedPin = null;
-        ApplyFilter();
+        await ApplyFilterAsync();
     }
 
     [RelayCommand]
@@ -403,7 +425,7 @@ public sealed partial class MainViewModel : ObservableObject
         if (CurrentFilter == PinFilter.Recent)
         {
             var selectedId = SelectedPin?.Id;
-            ApplyFilter();
+            await ApplyFilterAsync();
             SelectedPin = selectedId is long id
                 ? Pins.FirstOrDefault(item => item.Id == id)
                 : null;
@@ -669,7 +691,7 @@ public sealed partial class MainViewModel : ObservableObject
         SelectedCollection = selectedId is long id
             ? Collections.FirstOrDefault(c => c.Id == id)?.Item
             : null;
-        ApplyFilter();
+        await ApplyFilterAsync();
     }
 
     /// <summary>
@@ -701,7 +723,7 @@ public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
 
         await _pinManager.AddToCollectionAsync(pin.Id, collectionId);
         pin.CollectionIds.Add(collectionId);
-        ApplyFilter();
+        await ApplyFilterAsync();
     }
 
     /// <summary>
@@ -730,7 +752,7 @@ public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
 
         if (changed)
         {
-            ApplyFilter();
+            await ApplyFilterAsync();
         }
     }
 
@@ -760,7 +782,7 @@ public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
 
         if (changed)
         {
-            ApplyFilter();
+            await ApplyFilterAsync();
         }
     }
 
@@ -778,7 +800,7 @@ public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
         }
 
         SelectedPin = null;
-        ApplyFilter();
+        await ApplyFilterAsync();
     }
 
     public async Task DeleteCollectionAsync(Collection collection)
@@ -813,6 +835,11 @@ public async Task AddPinToCollectionAsync(Pin pin, long collectionId)
         var added = 0;
         foreach (var item in items)
         {
+            if (item is null)
+            {
+                continue;
+            }
+
             try
             {
                 await _pinManager.AddAsync(PinExportService.ToPin(item));

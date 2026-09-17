@@ -78,7 +78,7 @@ public static class PinExportService
             Icon = item.Icon?.Trim() ?? string.Empty,
             IsFavorite = item.IsFavorite,
             RunAsAdministrator = item.RunAsAdministrator,
-            IsEnabled = true,
+            IsEnabled = item.IsEnabled ?? true,
         };
     }
 
@@ -96,6 +96,7 @@ public static class PinExportService
             Icon = pin.Icon,
             IsFavorite = pin.IsFavorite,
             RunAsAdministrator = pin.RunAsAdministrator,
+            IsEnabled = pin.IsEnabled,
         };
     }
 
@@ -140,4 +141,7 @@ public sealed class PinExportItem
 
     [JsonPropertyName("runAsAdministrator")]
     public bool RunAsAdministrator { get; set; }
+
+    [JsonPropertyName("enabled")]
+    public bool? IsEnabled { get; set; }
 }

@@ -65,7 +65,9 @@ public sealed class AppSettings
                 Directory.CreateDirectory(directory);
             }
 
-            File.WriteAllText(SettingsPath, JsonSerializer.Serialize(this, AppSettingsJsonContext.Default.AppSettings));
+            var tempPath = SettingsPath + ".tmp";
+            File.WriteAllText(tempPath, JsonSerializer.Serialize(this, AppSettingsJsonContext.Default.AppSettings));
+            File.Move(tempPath, SettingsPath, overwrite: true);
         }
         catch (IOException)
         {
@@ -91,6 +93,10 @@ public sealed class AppSettings
                 }
             }
         }
+        catch (JsonException)
+        {
+            TryBackupCorruptSettings();
+        }
         catch (IOException)
         {
         }
@@ -99,6 +105,24 @@ public sealed class AppSettings
         }
 
         return new AppSettings { RunAtStartup = StartupManager.IsEnabled() };
+    }
+
+    private static void TryBackupCorruptSettings()
+    {
+        try
+        {
+            if (File.Exists(SettingsPath))
+            {
+                var backupPath = $"{SettingsPath}.bozuk-{DateTime.Now:yyyyMMdd-HHmmss}";
+                File.Move(SettingsPath, backupPath);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     internal static void Reset() => _instance = null;

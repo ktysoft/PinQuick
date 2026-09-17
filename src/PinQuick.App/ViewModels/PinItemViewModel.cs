@@ -164,12 +164,44 @@ public sealed partial class PinItemViewModel : ObservableObject
     public PinItemViewModel(Pin pin)
     {
         Pin = pin ?? throw new ArgumentNullException(nameof(pin));
-        _ = LoadIconAsync();
     }
 
     private static readonly ConcurrentDictionary<string, BitmapImage> IconCache = new();
 
-    private async Task LoadIconAsync()
+    /// <summary>
+    /// Kart ikonunu yükler. Kullanıcı arayüzüne eklenmeden önce beklenir,
+    /// böylece kart gerçeklenirken ikon hazır olur. Windows ikon/önbelleği
+    /// henüz soğukken (ilk açılış) çıkarma başarısız olabilir; bu durumda
+    /// kısa bir gecikmeyle otomatik bir kez daha denenir. Böylece "Yenile"
+    /// butonuna gerek kalmadan ikonlar kendiliğinden görünür.
+    /// </summary>
+    public async Task LoadIconAsync()
+    {
+        if (await TryLoadIconAsync())
+        {
+            return;
+        }
+
+        if (!_iconRetryScheduled)
+        {
+            _iconRetryScheduled = true;
+            _ = ScheduleIconRetryAsync();
+        }
+    }
+
+    private bool _iconRetryScheduled;
+
+    private async Task ScheduleIconRetryAsync()
+    {
+        await Task.Delay(1500);
+        if (await TryLoadIconAsync())
+        {
+            OnPropertyChanged(nameof(IconSource));
+            OnPropertyChanged(nameof(HasIconSource));
+        }
+    }
+
+    private async Task<bool> TryLoadIconAsync()
     {
         var iconValue = Pin.Icon?.Trim() ?? string.Empty;
 
@@ -181,7 +213,7 @@ public sealed partial class PinItemViewModel : ObservableObject
                 IconSource = image;
                 OnPropertyChanged(nameof(IconSource));
                 OnPropertyChanged(nameof(HasIconSource));
-                return;
+                return true;
             }
         }
 
@@ -193,8 +225,11 @@ public sealed partial class PinItemViewModel : ObservableObject
                 IconSource = image;
                 OnPropertyChanged(nameof(IconSource));
                 OnPropertyChanged(nameof(HasIconSource));
+                return true;
             }
         }
+
+        return false;
     }
 
     private static async Task<BitmapImage?> LoadIconImageAsync(string path)

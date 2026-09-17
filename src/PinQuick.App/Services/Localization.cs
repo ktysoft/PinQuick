@@ -159,6 +159,7 @@ public static class Loc
         ["TagsPlaceholder"] = "virgülle ayrılmış, ör: kod, sunucu",
         ["FieldCollection"] = "Koleksiyon",
         ["NoCollectionPlaceholder"] = "Koleksiyonsuz",
+        ["CollectionAddHint"] = "Düzenleme kaydedilirken seçilen koleksiyona eklenir; mevcut koleksiyonlar korunur.",
         ["FieldFavorite"] = "Favori",
         ["FieldAdmin"] = "Yönetici olarak çalıştır",
         ["FieldIcon"] = "İkon",
@@ -402,6 +403,7 @@ public static class Loc
         ["TagsPlaceholder"] = "comma separated, e.g: code, server",
         ["FieldCollection"] = "Collection",
         ["NoCollectionPlaceholder"] = "No collection",
+        ["CollectionAddHint"] = "Saving the edit adds the pin to the selected collection; existing collections are kept.",
         ["FieldFavorite"] = "Favorite",
         ["FieldAdmin"] = "Run as administrator",
         ["FieldIcon"] = "Icon",
@@ -584,6 +586,7 @@ public static class Strings
     public static string TagsPlaceholder => Loc.T("TagsPlaceholder");
     public static string FieldCollection => Loc.T("FieldCollection");
     public static string NoCollectionPlaceholder => Loc.T("NoCollectionPlaceholder");
+    public static string CollectionAddHint => Loc.T("CollectionAddHint");
     public static string FieldFavorite => Loc.T("FieldFavorite");
     public static string FieldAdmin => Loc.T("FieldAdmin");
     public static string FieldIcon => Loc.T("FieldIcon");
