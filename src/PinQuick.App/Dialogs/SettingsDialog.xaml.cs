@@ -35,6 +35,8 @@ public sealed partial class SettingsDialog : ContentDialog
 
     private int _hotkeyVk;
 
+    private bool _checkingUpdates;
+
     public SettingsDialog()
     {
         InitializeComponent();
@@ -157,5 +159,53 @@ public sealed partial class SettingsDialog : ContentDialog
     {
         ShowTourRequested = true;
         Hide();
+    }
+
+    private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_checkingUpdates)
+        {
+            return;
+        }
+
+        _checkingUpdates = true;
+        CheckUpdatesButton.IsEnabled = false;
+        UpdateStatusPanel.Visibility = Visibility.Visible;
+        UpdateDownloadLink.Visibility = Visibility.Collapsed;
+        UpdateStatusText.Text = Loc.T("UpdateChecking");
+
+        var result = await UpdateService.CheckForUpdatesAsync();
+
+        _checkingUpdates = false;
+        CheckUpdatesButton.IsEnabled = true;
+
+        if (!result.Succeeded)
+        {
+            UpdateStatusText.Text = Loc.T("UpdateCheckFailed");
+            return;
+        }
+
+        if (result.IsUpdateAvailable)
+        {
+            UpdateStatusText.Text = string.Format(Loc.T("UpdateAvailable"), result.LatestVersion, result.CurrentVersion);
+            if (!string.IsNullOrEmpty(result.ReleaseUrl))
+            {
+                UpdateDownloadLink.Content = Loc.T("UpdateDownload");
+                UpdateDownloadLink.Tag = result.ReleaseUrl;
+                UpdateDownloadLink.Visibility = Visibility.Visible;
+            }
+
+            return;
+        }
+
+        UpdateStatusText.Text = Loc.T("UpdateUpToDate");
+    }
+
+    private void UpdateDownloadLink_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is HyperlinkButton { Tag: string url } && Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        {
+            _ = global::Windows.System.Launcher.LaunchUriAsync(uri);
+        }
     }
 }

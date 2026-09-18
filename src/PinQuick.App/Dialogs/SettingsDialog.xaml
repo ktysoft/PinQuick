@@ -94,6 +94,25 @@
             <ComboBoxItem Content="{x:Bind svc:Strings.AutoBackupWeekly}" />
         </ComboBox>
 
+        <TextBlock Text="{x:Bind svc:Strings.UpdateCheckTitle}" FontWeight="SemiBold" />
+        <StackPanel Spacing="8">
+            <Button x:Name="CheckUpdatesButton"
+                    Content="{x:Bind svc:Strings.CheckUpdatesButton}"
+                    HorizontalAlignment="Left"
+                    Click="CheckUpdatesButton_Click" />
+            <StackPanel x:Name="UpdateStatusPanel"
+                        Spacing="8"
+                        Visibility="Collapsed">
+                <TextBlock x:Name="UpdateStatusText"
+                           TextWrapping="Wrap" />
+                <HyperlinkButton x:Name="UpdateDownloadLink"
+                                 Padding="0"
+                                 VerticalAlignment="Center"
+                                 Visibility="Collapsed"
+                                 Click="UpdateDownloadLink_Click" />
+            </StackPanel>
+        </StackPanel>
+
         <Button Content="{x:Bind svc:Strings.MenuShowTour}"
                 HorizontalAlignment="Left"
                 Click="ShowTourButton_Click" />

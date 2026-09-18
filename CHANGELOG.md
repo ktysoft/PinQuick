@@ -3,6 +3,15 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [1.4.0] - 2026-09-18
+
+### Geliştirmeler
+
+- Ayarlar bölümüne "Güncellemeleri Kontrol Et" butonu eklendi; GitHub Releases üzerinden
+  en son sürüm kontrol edilerek sonuç (güncel / yeni sürüm + indirme bağlantısı) anında gösteriliyor.
+- Alt bilgi çubuğunda sürüm numarasının yanına tıklanabilir "Güncelleme Kontrol Et" bağlantısı
+  eklendi; yeni sürüm varsa sürüm notları ve indirme bağlantısı bir iletişim kutusunda sunuluyor.
+
 ## [1.3.0] - 2026-09-18
 
 ### Düzeltildi

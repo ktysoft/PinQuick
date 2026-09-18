@@ -1029,6 +1029,135 @@ public sealed partial class MainPage : Page
     private void FooterSponsorLink_Click(object sender, RoutedEventArgs e)
         => LaunchUri(AppInfo.SponsorUrl);
 
+    private async void FooterCheckUpdates_Click(object sender, RoutedEventArgs e)
+        => await CheckForUpdatesAsync();
+
+    private bool _updateDialogOpen;
+
+    private async Task CheckForUpdatesAsync()
+    {
+        if (_updateDialogOpen)
+        {
+            return;
+        }
+
+        _updateDialogOpen = true;
+        try
+        {
+            var checkingContent = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Spacing = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            checkingContent.Children.Add(new ProgressRing
+            {
+                IsActive = true,
+                Width = 24,
+                Height = 24,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+            checkingContent.Children.Add(new TextBlock
+            {
+                Text = Loc.T("UpdateChecking"),
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+
+            var checkingDialog = new ContentDialog
+            {
+                Title = Loc.T("UpdateCheckTitle"),
+                Content = checkingContent,
+                XamlRoot = RootGrid.XamlRoot,
+            };
+
+            _ = checkingDialog.ShowAsync();
+            var result = await UpdateService.CheckForUpdatesAsync();
+            checkingDialog.Hide();
+
+            if (!result.Succeeded)
+            {
+                await ShowErrorAsync(Loc.T("UpdateCheckFailed"));
+                return;
+            }
+
+            if (!result.IsUpdateAvailable)
+            {
+                var upToDateDialog = new ContentDialog
+                {
+                    Title = Loc.T("UpdateCheckTitle"),
+                    Content = Loc.T("UpdateUpToDate"),
+                    PrimaryButtonText = Loc.T("CloseButton"),
+                    DefaultButton = ContentDialogButton.Primary,
+                    XamlRoot = RootGrid.XamlRoot,
+                };
+                await upToDateDialog.ShowAsync();
+                return;
+            }
+
+            var content = new StackPanel { Spacing = 10, MaxWidth = 480 };
+            content.Children.Add(new TextBlock
+            {
+                Text = string.Format(Loc.T("UpdateAvailable"), result.LatestVersion, result.CurrentVersion),
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                TextWrapping = TextWrapping.Wrap,
+            });
+
+            if (!string.IsNullOrEmpty(result.ReleaseNotes))
+            {
+                var notes = MarkdownFormatter.ToPlainText(result.ReleaseNotes);
+                if (notes.Length > 1200)
+                {
+                    notes = notes[..1200] + "...";
+                }
+
+                content.Children.Add(new ScrollViewer
+                {
+                    MaxHeight = 180,
+                    Content = new TextBlock
+                    {
+                        Text = notes,
+                        TextWrapping = TextWrapping.Wrap,
+                        Opacity = 0.8,
+                    },
+                });
+            }
+
+            if (!string.IsNullOrEmpty(result.ReleaseUrl))
+            {
+                var downloadHost = new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    Spacing = 10,
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                var downloadLink = new HyperlinkButton
+                {
+                    Content = Loc.T("UpdateDownload"),
+                    Padding = new Thickness(0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                };
+                var releaseUrl = result.ReleaseUrl;
+                downloadLink.Click += (_, _) => LaunchUri(releaseUrl);
+                downloadHost.Children.Add(downloadLink);
+                content.Children.Add(downloadHost);
+            }
+
+            var dialog = new ContentDialog
+            {
+                Title = Loc.T("UpdateCheckTitle"),
+                Content = content,
+                PrimaryButtonText = Loc.T("CloseButton"),
+                DefaultButton = ContentDialogButton.Primary,
+                XamlRoot = RootGrid.XamlRoot,
+            };
+            await dialog.ShowAsync();
+        }
+        finally
+        {
+            _updateDialogOpen = false;
+        }
+    }
+
     private async void ExportMenuItem_Click(object sender, RoutedEventArgs e)
     {
         var filter = await ShowExportFilterDialogAsync();

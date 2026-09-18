@@ -1,7 +1,7 @@
 Unicode true
 
 !define APP_NAME "PinQuick"
-!define APP_VERSION "1.3.0"
+!define APP_VERSION "1.4.0"
 !define APP_EXE "PinQuick.App.exe"
 !define APP_PUBLISHER "KTYSoft"
 !define APP_ICON "src\PinQuick.App\Assets\AppIcon.ico"

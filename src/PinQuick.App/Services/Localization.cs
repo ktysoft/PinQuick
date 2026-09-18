@@ -215,6 +215,17 @@ public static class Loc
         ["RestartRequiredMessage"] = "Dil değişikliği için uygulamanın yeniden başlatılması gerekir. Şimdi yeniden başlatılsın mı?",
         ["RestartButton"] = "Yeniden Başlat",
 
+        // Updates
+        ["CheckUpdatesButton"] = "Güncellemeleri Kontrol Et",
+        ["FooterCheckUpdates"] = "Güncelleme Kontrol Et",
+        ["FooterCheckUpdatesTooltip"] = "Güncellemeleri kontrol et",
+        ["UpdateCheckTitle"] = "Güncelleme",
+        ["UpdateChecking"] = "Güncellemeler kontrol ediliyor...",
+        ["UpdateUpToDate"] = "En son sürümü kullanıyorsunuz.",
+        ["UpdateAvailable"] = "Yeni sürüm mevcut: {0} (mevcut: {1})",
+        ["UpdateDownload"] = "İndir",
+        ["UpdateCheckFailed"] = "Güncellemeler kontrol edilemedi. İnternet bağlantınızı kontrol edip tekrar deneyin.",
+
         // Onboarding turu
         ["TourTitle"] = "PinQuick Turu",
 
@@ -456,6 +467,16 @@ public static class Loc
         ["RestartRequiredMessage"] = "The app must restart to apply the language change. Restart now?",
         ["RestartButton"] = "Restart",
 
+        ["CheckUpdatesButton"] = "Check for Updates",
+        ["FooterCheckUpdates"] = "Check for Updates",
+        ["FooterCheckUpdatesTooltip"] = "Check for updates",
+        ["UpdateCheckTitle"] = "Update",
+        ["UpdateChecking"] = "Checking for updates...",
+        ["UpdateUpToDate"] = "You are up to date.",
+        ["UpdateAvailable"] = "New version available: {0} (current: {1})",
+        ["UpdateDownload"] = "Download",
+        ["UpdateCheckFailed"] = "Could not check for updates. Check your internet connection and try again.",
+
         ["AboutTitle"] = "About {0}",
         ["AboutDescription"] = "Quick access to your frequently used apps, folders, files and websites in one window.",
         ["AboutVersion"] = "Version: {0}",
@@ -625,6 +646,16 @@ public static class Strings
     public static string HotkeyInputPlaceholder => Loc.T("HotkeyInputPlaceholder");
     public static string HotkeyErrorModifierOnly => Loc.T("HotkeyErrorModifierOnly");
     public static string RestartButton => Loc.T("RestartButton");
+
+    public static string CheckUpdatesButton => Loc.T("CheckUpdatesButton");
+    public static string FooterCheckUpdates => Loc.T("FooterCheckUpdates");
+    public static string FooterCheckUpdatesTooltip => Loc.T("FooterCheckUpdatesTooltip");
+    public static string UpdateCheckTitle => Loc.T("UpdateCheckTitle");
+    public static string UpdateChecking => Loc.T("UpdateChecking");
+    public static string UpdateUpToDate => Loc.T("UpdateUpToDate");
+    public static string UpdateAvailable => Loc.T("UpdateAvailable");
+    public static string UpdateDownload => Loc.T("UpdateDownload");
+    public static string UpdateCheckFailed => Loc.T("UpdateCheckFailed");
 
     public static string CloseButton => Loc.T("CloseButton");
     public static string ErrorTitle => Loc.T("ErrorTitle");
