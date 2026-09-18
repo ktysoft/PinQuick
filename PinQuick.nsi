@@ -1,7 +1,7 @@
 Unicode true
 
 !define APP_NAME "PinQuick"
-!define APP_VERSION "1.4.0"
+!define APP_VERSION "1.4.1"
 !define APP_EXE "PinQuick.App.exe"
 !define APP_PUBLISHER "KTYSoft"
 !define APP_ICON "src\PinQuick.App\Assets\AppIcon.ico"
@@ -49,8 +49,8 @@ Section "Ana dosyalar" SecMain
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   CreateDirectory "$SMPROGRAMS\${APP_NAME}"
-  CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\Assets\AppIcon.ico" 0 "" "" "PinQuick ${APP_VERSION}"
-  CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\Assets\AppIcon.ico" 0
+  CreateShortcut "$SMPROGRAMS\${APP_NAME}\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0 "" "" "PinQuick ${APP_VERSION}"
+  CreateShortcut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}" "" "$INSTDIR\${APP_EXE}" 0
 
   ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
 

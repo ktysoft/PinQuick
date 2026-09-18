@@ -3,6 +3,15 @@
 Bu proje [Keep a Changelog](https://keepachangelog.com/tr/1.0.0/) ve
 [SemVer](https://semver.org/spec/v2.0.0.html) biçimine uyar.
 
+## [1.4.1] - 2026-09-18
+
+### Düzeltildi
+
+- Kurulumcu artık Başlat menüsü ve masaüstü kısayollarını exe'deki gömülü PinQuick
+  ikonuyla oluşturuyor; kısayol ikonlarının görünmemesi sorunu giderildi.
+- 32-bit (win-x86) kurulumcu eklendi; x86, x64 ve ARM64 için ayrı kurulumcular
+  yayınlanıyor. Yayın paketlerinde zip dosyaları kaldırıldı.
+
 ## [1.4.0] - 2026-09-18
 
 ### Geliştirmeler
